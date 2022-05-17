@@ -103,7 +103,7 @@ public class KeyUtils {
 			PGPDigestCalculator hashCalculator = new JcaPGPDigestCalculatorProviderBuilder().build()
 					.get(HashAlgorithmTags.SHA1);
 			PGPContentSignerBuilder signerBuilder = new JcaPGPContentSignerBuilder(
-					dsaKeyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA256);
+					dsaKeyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA256); // we must change this because DSA 2048 requires 256 sign
 			PBESecretKeyEncryptor privateKeyEncriptor = new JcePBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_128,
 					hashCalculator).setProvider("BC").build(passphrase.toCharArray());
 
