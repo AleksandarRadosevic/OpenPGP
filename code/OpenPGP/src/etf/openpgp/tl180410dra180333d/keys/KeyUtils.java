@@ -103,7 +103,7 @@ public class KeyUtils {
 			PGPDigestCalculator hashCalculator = new JcaPGPDigestCalculatorProviderBuilder().build()
 					.get(HashAlgorithmTags.SHA1);
 			PGPContentSignerBuilder signerBuilder = new JcaPGPContentSignerBuilder(
-					dsaKeyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1);
+					dsaKeyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA256);
 			PBESecretKeyEncryptor privateKeyEncriptor = new JcePBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_128,
 					hashCalculator).setProvider("BC").build(passphrase.toCharArray());
 
