@@ -9,6 +9,9 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.security.Security;
+import java.util.Date;
+import java.util.Iterator;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -21,6 +24,11 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
+
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 
 import etf.openpgp.tl180410dra180333d.keys.KeyUtils;
 
@@ -36,9 +44,12 @@ public class Application extends JFrame {
 
 	private DefaultTableModel privateKeyRingTableModel = null;
 	private DefaultTableModel publicKeyRingTableModel = null;
-	private KeyUtils keyUtils = new KeyUtils();
+	private KeyUtils keyUtils = null;
 
 	public Application() {
+		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+		this.keyUtils = new KeyUtils(this);
+		
 		this.setTitle("OpenPGP App");
 		this.setSize(1080, 720);
 
@@ -85,16 +96,9 @@ public class Application extends JFrame {
 		JButton deletePrivateKeyRingButton = new JButton("DELETE SELECTED PRIVATE KEY RING");
 		privateKeyRingPanel.add(deletePrivateKeyRingButton, BorderLayout.SOUTH);
 
-		String[] columnLabels = { "Timestamp", "User ID", "Key ID", "Public Key", "Encrypted Private Key" };
+		String[] columnLabels = { "Timestamp", "User ID", "Sign Key ID" };
 		this.privateKeyRingTableModel = this.initialize_keyRingTable(privateKeyRingPanel, columnLabels,
 				deletePrivateKeyRingButton);
-
-		this.privateKeyRingTableModel.addRow(
-				new String[] { "16/05/2022 17:04", "ralt", "ABCD-1234", "ABCD-EFGH-IJKL-MNOP-QRST", "potg4das13cxzz" });
-		this.privateKeyRingTableModel.addRow(
-				new String[] { "16/05/2022 17:05", "ralt", "ABCD-1234", "ABCD-EFGH-IJKL-MNOP-QRST", "potg4das13cxzz" });
-		this.privateKeyRingTableModel.addRow(
-				new String[] { "16/05/2022 17:06", "ralt", "ABCD-1234", "ABCD-EFGH-IJKL-MNOP-QRST", "potg4das13cxzz" });
 	}
 
 	private void initialize_publicKeyRingPanel(JPanel publicKeyRingPanel) {
@@ -108,12 +112,7 @@ public class Application extends JFrame {
 		this.publicKeyRingTableModel = this.initialize_keyRingTable(publicKeyRingPanel, columnLabels,
 				deletePublicKeyRingButton);
 
-		this.publicKeyRingTableModel
-				.addRow(new String[] { "16/05/2022 17:04", "ralt", "ABCD-1234", "ABCD-EFGH-IJKL-MNOP-QRST" });
-		this.publicKeyRingTableModel
-				.addRow(new String[] { "16/05/2022 17:05", "ralt", "ABCD-1234", "ABCD-EFGH-IJKL-MNOP-QRST" });
-		this.publicKeyRingTableModel
-				.addRow(new String[] { "16/05/2022 17:06", "ralt", "ABCD-1234", "ABCD-EFGH-IJKL-MNOP-QRST" });
+
 	}
 
 	private DefaultTableModel initialize_keyRingTable(JPanel keyRingPanel, String[] columnLabels,
@@ -196,8 +195,8 @@ public class Application extends JFrame {
 				String signAlgorithm = (String) jcbSignAlgorithm.getSelectedItem();
 				String encryptionAlgorithm = (String) jcbEncryptionAlgorithm.getSelectedItem();
 				boolean ret = insertNewPrivateKeyRing(name, email, signAlgorithm, encryptionAlgorithm);
-				if (!ret) {
-					JOptionPane.showMessageDialog(new JFrame(), "Nije uspelo dodavanje kljuca, sva polja su obavezna!",
+				if (!ret) {					
+					JOptionPane.showMessageDialog(new JFrame(), "Nije uspelo dodavanje kljuca, sva polja su obavezna kao i passphrase za cuvanje privatnog kljuca!",
 							"Greska pri dodavanju kljuca", JOptionPane.ERROR_MESSAGE);
 				}
 			}
@@ -266,9 +265,50 @@ public class Application extends JFrame {
 		if (encryptionAlgorithm == null || encryptionAlgorithm.length() == 0)
 			return false;
 		
-		
-		return this.keyUtils.generatePrivateRingKey(name+" ("+ email+")", signAlgorithm, encryptionAlgorithm,"passphrase");
+		String passphrase = JOptionPane.showInputDialog(new JFrame(), "Enter passphrase to protect your private key");
+		if (passphrase == null || passphrase.length()==0) {
+			return false;
+		}
+		// identity => name <email>
+		return this.keyUtils.generatePrivateRingKey(name+" <"+ email+">", signAlgorithm, encryptionAlgorithm, passphrase);
 
+	}
+	
+	public void update_privateKeyRingTableModel(PGPSecretKeyRingCollection privateKeyRingCollection) {
+		this.privateKeyRingTableModel.setRowCount(0); // clear table model
+		
+		Iterator<PGPSecretKeyRing> privateKeyRingIterator = privateKeyRingCollection.getKeyRings();
+
+		while(privateKeyRingIterator.hasNext()) {
+			PGPSecretKeyRing privateKeyRing = privateKeyRingIterator.next();
+			
+			Iterator<PGPSecretKey> privateKeyIterator = privateKeyRing.getSecretKeys();
+			
+			// we are sure that we have two keys in ring, one for sign and one for encryption
+			if(!privateKeyIterator.hasNext()) {
+				System.err.println("U prstenu privatnog kljuca nema kljuca za potpisivanje!");
+				break;
+			}
+			PGPSecretKey signKey = privateKeyIterator.next();
+			
+			if(!privateKeyIterator.hasNext()) {
+				System.err.println("U prstenu privatnog kljuca nema kljuca za enkripciju!");
+				break;
+			}
+			PGPSecretKey encryptionKey = privateKeyIterator.next();
+			
+			long singnKeyId = signKey.getKeyID(); // this key id is used to be shown in key ring table
+			// long encriptionKeyId = encryptionKey.getKeyID();
+			
+			String keyOwner = signKey.getUserIDs().next();
+			
+			Date creationDate = signKey.getPublicKey().getCreationTime();
+					
+			String[] privateKeyRingTableRow = new String[] { creationDate.toString() , keyOwner,String.format("%016x", singnKeyId).toUpperCase() };
+			
+			this.privateKeyRingTableModel.addRow(privateKeyRingTableRow);
+		}
+		
 	}
 
 	public static void main(String[] args) {

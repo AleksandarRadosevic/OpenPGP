@@ -1,28 +1,55 @@
 package etf.openpgp.tl180410dra180333d.keys;
 
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.Date;
+import java.util.LinkedList;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.openpgp.*;
+import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
+import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 
+import etf.openpgp.tl180410dra180333d.Application;
+
 public class KeyUtils {
+	private static final String packageRootPath = "./src/etf/openpgp/tl180410dra180333d/";
+	
 	private PGPSecretKeyRingCollection privateKeyRingCollection;
 	private PGPPublicKeyRingCollection publicKeyRingCollection;
-	private static final String privateKeyRingCollectionPath = "./data/private_key_ring_collection.asc";
-	private static final String publicKeyRingCollectionPath = "./data/public_key_ring_collection.asc";
+	private static final File privateKeyRingCollectionFile = new File(KeyUtils.packageRootPath + "/data/private_key_ring_collection.asc");
+	// private static final String privateKeyRingCollectionPath = "./data/private_key_ring_collection.asc";
+	private static final File publicKeyRingCollectionFile = new File(KeyUtils.packageRootPath + "/data/public_key_ring_collection.asc");
+	// private static final String publicKeyRingCollectionPath = "./data/public_key_ring_collection.asc";
 
+	private Application application = null;
+	
+	public KeyUtils(Application application) {
+		try {
+			this.publicKeyRingCollection = new PGPPublicKeyRingCollection(new LinkedList<>());
+			this.privateKeyRingCollection = new PGPSecretKeyRingCollection(new LinkedList<>());
+			this.application = application;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (PGPException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public boolean generatePrivateRingKey(String userId, String signAlgorithm, String encryptionAlgorithm,
 			String passphrase) {
 
@@ -64,17 +91,20 @@ public class KeyUtils {
 
 		try {
 
-			PGPDigestCalculator hash = new JcaPGPDigestCalculatorProviderBuilder().build().get(HashAlgorithmTags.SHA1);
+			PGPDigestCalculator hashCalculator = new JcaPGPDigestCalculatorProviderBuilder().build().get(HashAlgorithmTags.SHA1);
+			PGPContentSignerBuilder signerBuilder = new JcaPGPContentSignerBuilder(dsaKeyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1);
+			PBESecretKeyEncryptor privateKeyEncriptor = new JcePBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_128, hashCalculator).setProvider("BC")
+					.build(passphrase.toCharArray());
+			
+			
+			// null values are used for PGPSignatureSubpacketVector fields (additional information about issuer, expiration date, flags etc.)
+			// we don't set expiration date for our sertificate
+			PGPKeyRingGenerator keyRingGenerator = new PGPKeyRingGenerator(PGPSignature.POSITIVE_CERTIFICATION, 
+					dsaKeyPair, userId, hashCalculator, null, null,	signerBuilder, privateKeyEncriptor);
 
-			PGPKeyRingGenerator keyRingGenerator = new PGPKeyRingGenerator(PGPSignature.POSITIVE_CERTIFICATION,
-					dsaKeyPair, userId, hash, null, null,
-					new JcaPGPContentSignerBuilder(dsaKeyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1),
-					new JcePBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_128, hash).setProvider("BC")
-							.build(passphrase.toCharArray()));
-
-			// add subkey for encryption
-			keyRingGenerator.addSubKey(elGamalKeyPair);
-			privateKeyRing = keyRingGenerator.generateSecretKeyRing();
+			
+			keyRingGenerator.addSubKey(elGamalKeyPair); // add subkey for encryption
+			privateKeyRing = keyRingGenerator.generateSecretKeyRing(); // private key ring is created and should be saved private key ring collection
 			return savePrivateKeyRing(privateKeyRing);
 			
 		} catch (PGPException e) {
@@ -86,11 +116,18 @@ public class KeyUtils {
 	}
 
 	private boolean savePrivateKeyRing(PGPSecretKeyRing privateKeyRing) {
+		try {
+			KeyUtils.privateKeyRingCollectionFile.createNewFile();// create file if it doesn't exist
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			return false;
+		} 
 		try (OutputStream securedOutputStream = new ArmoredOutputStream(
-				new FileOutputStream(KeyUtils.privateKeyRingCollectionPath))) {
+				new FileOutputStream(KeyUtils.privateKeyRingCollectionFile, false))) {
 			this.privateKeyRingCollection = PGPSecretKeyRingCollection.addSecretKeyRing(this.privateKeyRingCollection,
 					privateKeyRing);
 			this.privateKeyRingCollection.encode(securedOutputStream);
+			this.application.update_privateKeyRingTableModel(privateKeyRingCollection);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
