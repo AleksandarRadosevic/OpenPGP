@@ -9,6 +9,7 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.math.BigInteger;
 import java.security.Security;
 import java.util.Date;
 import java.util.Iterator;
@@ -49,7 +50,7 @@ public class Application extends JFrame {
 	public Application() {
 		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 		this.keyUtils = new KeyUtils(this);
-		
+
 		this.setTitle("OpenPGP App");
 		this.setSize(1080, 720);
 
@@ -92,16 +93,15 @@ public class Application extends JFrame {
 
 		JPanel jpAddNewPrivateRingKeyForm = create_addNewPrivateRingKeyForm();
 		privateKeyRingPanel.add(jpAddNewPrivateRingKeyForm, BorderLayout.NORTH);
-		
+
 		JPanel jpControls = new JPanel();
-		jpControls.setLayout(new GridLayout(1,2));
-		
-		
+		jpControls.setLayout(new GridLayout(1, 2));
+
 		JButton exportPrivateKeyRingButton = new JButton("EXPORT SELECTED PRIVATE KEY RING");
 		jpControls.add(exportPrivateKeyRingButton, 0);
 		JButton deletePrivateKeyRingButton = new JButton("DELETE SELECTED PRIVATE KEY RING");
 		jpControls.add(deletePrivateKeyRingButton, 1);
-		
+
 		privateKeyRingPanel.add(jpControls, BorderLayout.SOUTH);
 
 		String[] columnLabels = { "Timestamp", "User ID", "Sign Key ID" };
@@ -113,22 +113,19 @@ public class Application extends JFrame {
 
 		publicKeyRingPanel.setLayout(new BorderLayout());
 
-
 		JPanel jpControls = new JPanel();
-		jpControls.setLayout(new GridLayout(1,2));
-		
-		
+		jpControls.setLayout(new GridLayout(1, 2));
+
 		JButton exportPublicKeyRingButton = new JButton("EXPORT SELECTED PUBLIC KEY RING");
 		jpControls.add(exportPublicKeyRingButton, 0);
 		JButton deletePublicKeyRingButton = new JButton("DELETE SELECTED PUBLIC KEY RING");
 		jpControls.add(deletePublicKeyRingButton, 1);
-		
+
 		publicKeyRingPanel.add(jpControls, BorderLayout.SOUTH);
-		
+
 		String[] columnLabels = { "Timestamp", "User ID", "Key ID", "Public Key" };
 		this.publicKeyRingTableModel = this.initialize_keyRingTable(publicKeyRingPanel, columnLabels,
 				deletePublicKeyRingButton, exportPublicKeyRingButton);
-
 
 	}
 
@@ -160,22 +157,23 @@ public class Application extends JFrame {
 				// check for selected row first
 				if (jtKeyRingTable.getSelectedRow() != -1) {
 					// remove selected row from the model
-					
-					//keyRingTableModel.removeRow(jtKeyRingTable.getSelectedRow());
-					long keyId = Long.parseLong((String) keyRingTableModel.getValueAt(jtKeyRingTable.getSelectedRow(), 2));
+
+					String keyIdStr = (String) keyRingTableModel.getValueAt(jtKeyRingTable.getSelectedRow(), 2);
+					long keyId = new BigInteger(keyIdStr, 16).longValue();
 					deletePrivateKeyRing(keyId);
 				}
 			}
 		});
-		
+
 		exportKeyRingButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				// check for selected row first
 				if (jtKeyRingTable.getSelectedRow() != -1) {
-				
-					long keyId = Long.parseLong((String) keyRingTableModel.getValueAt(jtKeyRingTable.getSelectedRow(), 2));
+
+					String keyIdStr = (String) keyRingTableModel.getValueAt(jtKeyRingTable.getSelectedRow(), 2);
+					long keyId = new BigInteger(keyIdStr, 16).longValue();
 					exportPrivateKeyRing(keyId);
 				}
 			}
@@ -228,8 +226,9 @@ public class Application extends JFrame {
 				String signAlgorithm = (String) jcbSignAlgorithm.getSelectedItem();
 				String encryptionAlgorithm = (String) jcbEncryptionAlgorithm.getSelectedItem();
 				boolean ret = insertNewPrivateKeyRing(name, email, signAlgorithm, encryptionAlgorithm);
-				if (!ret) {					
-					JOptionPane.showMessageDialog(new JFrame(), "Nije uspelo dodavanje kljuca, sva polja su obavezna kao i passphrase za cuvanje privatnog kljuca!",
+				if (!ret) {
+					JOptionPane.showMessageDialog(new JFrame(),
+							"Nije uspelo dodavanje kljuca, sva polja su obavezna kao i passphrase za cuvanje privatnog kljuca!",
 							"Greska pri dodavanju kljuca", JOptionPane.ERROR_MESSAGE);
 				}
 			}
@@ -297,59 +296,84 @@ public class Application extends JFrame {
 
 		if (encryptionAlgorithm == null || encryptionAlgorithm.length() == 0)
 			return false;
-		
+
 		String passphrase = JOptionPane.showInputDialog(new JFrame(), "Enter passphrase to protect your private key");
-		if (passphrase == null || passphrase.length()==0) {
+		if (passphrase == null || passphrase.length() == 0) {
 			return false;
 		}
 		// identity => name <email>
-		return this.keyUtils.generatePrivateRingKey(name+" <"+ email+">", signAlgorithm, encryptionAlgorithm, passphrase);
+		return this.keyUtils.generatePrivateRingKey(name + " <" + email + ">", signAlgorithm, encryptionAlgorithm,
+				passphrase);
 
 	}
-	
+
 	public void update_privateKeyRingTableModel(PGPSecretKeyRingCollection privateKeyRingCollection) {
 		this.privateKeyRingTableModel.setRowCount(0); // clear table model
-		
+
 		Iterator<PGPSecretKeyRing> privateKeyRingIterator = privateKeyRingCollection.getKeyRings();
 
-		while(privateKeyRingIterator.hasNext()) {
+		while (privateKeyRingIterator.hasNext()) {
 			PGPSecretKeyRing privateKeyRing = privateKeyRingIterator.next();
-			
+
 			Iterator<PGPSecretKey> privateKeyIterator = privateKeyRing.getSecretKeys();
-			
-			// we are sure that we have two keys in ring, one for sign and one for encryption
-			if(!privateKeyIterator.hasNext()) {
+
+			// we are sure that we have two keys in ring, one for sign and one for
+			// encryption
+			if (!privateKeyIterator.hasNext()) {
 				System.err.println("U prstenu privatnog kljuca nema kljuca za potpisivanje!");
 				break;
 			}
 			PGPSecretKey signKey = privateKeyIterator.next();
-			
-			if(!privateKeyIterator.hasNext()) {
+
+			if (!privateKeyIterator.hasNext()) {
 				System.err.println("U prstenu privatnog kljuca nema kljuca za enkripciju!");
 				break;
 			}
 			PGPSecretKey encryptionKey = privateKeyIterator.next();
-			
+
 			long singnKeyId = signKey.getKeyID(); // this key id is used to be shown in key ring table
 			// long encriptionKeyId = encryptionKey.getKeyID();
-			
+
 			String keyOwner = signKey.getUserIDs().next();
-			
+
 			Date creationDate = signKey.getPublicKey().getCreationTime();
-					
-			String[] privateKeyRingTableRow = new String[] { creationDate.toString() , keyOwner,String.format("%016x", singnKeyId).toUpperCase() };
-			
+
+			String[] privateKeyRingTableRow = new String[] { creationDate.toString(), keyOwner,
+					String.format("%016x", singnKeyId).toUpperCase() };
+
 			this.privateKeyRingTableModel.addRow(privateKeyRingTableRow);
 		}
-		
+
 	}
-	
+
 	private void deletePrivateKeyRing(long keyId) {
-		
+		String passphrase = JOptionPane.showInputDialog(new JFrame(),
+				"Enter passphrase used to protect your private key");
+		if (passphrase == null || passphrase.length() == 0) {
+			JOptionPane.showMessageDialog(new JFrame(),
+					"Key from private key ring collection can't be deleted without passphrase!",
+					"Error - key can't be deleted", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		boolean ret = this.keyUtils.deletePrivateKeyRing(keyId, passphrase);
+		if (!ret) {
+			JOptionPane.showMessageDialog(new JFrame(), "Key isn't deletes!", "Delete error",
+					JOptionPane.ERROR_MESSAGE);
+		} else {
+			JOptionPane.showMessageDialog(new JFrame(), "Selected key is deleted!", "Success",
+					JOptionPane.INFORMATION_MESSAGE);
+		}
 	}
-	
+
 	private void exportPrivateKeyRing(long keyId) {
-		
+		boolean ret = keyUtils.exportPrivateKeyRing(keyId);
+		if (!ret) {
+			JOptionPane.showMessageDialog(new JFrame(), "Exporting key is not successful!", "Export error",
+					JOptionPane.ERROR_MESSAGE);
+		} else {
+			JOptionPane.showMessageDialog(new JFrame(), "Exporting key is successful!", "Success",
+					JOptionPane.INFORMATION_MESSAGE);
+		}
 	}
 
 	public static void main(String[] args) {
