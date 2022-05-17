@@ -92,31 +92,48 @@ public class Application extends JFrame {
 
 		JPanel jpAddNewPrivateRingKeyForm = create_addNewPrivateRingKeyForm();
 		privateKeyRingPanel.add(jpAddNewPrivateRingKeyForm, BorderLayout.NORTH);
-
+		
+		JPanel jpControls = new JPanel();
+		jpControls.setLayout(new GridLayout(1,2));
+		
+		
+		JButton exportPrivateKeyRingButton = new JButton("EXPORT SELECTED PRIVATE KEY RING");
+		jpControls.add(exportPrivateKeyRingButton, 0);
 		JButton deletePrivateKeyRingButton = new JButton("DELETE SELECTED PRIVATE KEY RING");
-		privateKeyRingPanel.add(deletePrivateKeyRingButton, BorderLayout.SOUTH);
+		jpControls.add(deletePrivateKeyRingButton, 1);
+		
+		privateKeyRingPanel.add(jpControls, BorderLayout.SOUTH);
 
 		String[] columnLabels = { "Timestamp", "User ID", "Sign Key ID" };
 		this.privateKeyRingTableModel = this.initialize_keyRingTable(privateKeyRingPanel, columnLabels,
-				deletePrivateKeyRingButton);
+				deletePrivateKeyRingButton, exportPrivateKeyRingButton);
 	}
 
 	private void initialize_publicKeyRingPanel(JPanel publicKeyRingPanel) {
 
 		publicKeyRingPanel.setLayout(new BorderLayout());
 
-		JButton deletePublicKeyRingButton = new JButton("DELETE SELECTED PUBLIC KEY RING");
-		publicKeyRingPanel.add(deletePublicKeyRingButton, BorderLayout.SOUTH);
 
+		JPanel jpControls = new JPanel();
+		jpControls.setLayout(new GridLayout(1,2));
+		
+		
+		JButton exportPublicKeyRingButton = new JButton("EXPORT SELECTED PUBLIC KEY RING");
+		jpControls.add(exportPublicKeyRingButton, 0);
+		JButton deletePublicKeyRingButton = new JButton("DELETE SELECTED PUBLIC KEY RING");
+		jpControls.add(deletePublicKeyRingButton, 1);
+		
+		publicKeyRingPanel.add(jpControls, BorderLayout.SOUTH);
+		
 		String[] columnLabels = { "Timestamp", "User ID", "Key ID", "Public Key" };
 		this.publicKeyRingTableModel = this.initialize_keyRingTable(publicKeyRingPanel, columnLabels,
-				deletePublicKeyRingButton);
+				deletePublicKeyRingButton, exportPublicKeyRingButton);
 
 
 	}
 
 	private DefaultTableModel initialize_keyRingTable(JPanel keyRingPanel, String[] columnLabels,
-			JButton deleteKeyRingButton) {
+			JButton deleteKeyRingButton, JButton exportKeyRingButton) {
 
 		JTable jtKeyRingTable = new JTable();
 		jtKeyRingTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
@@ -143,7 +160,23 @@ public class Application extends JFrame {
 				// check for selected row first
 				if (jtKeyRingTable.getSelectedRow() != -1) {
 					// remove selected row from the model
-					keyRingTableModel.removeRow(jtKeyRingTable.getSelectedRow());
+					
+					//keyRingTableModel.removeRow(jtKeyRingTable.getSelectedRow());
+					long keyId = Long.parseLong((String) keyRingTableModel.getValueAt(jtKeyRingTable.getSelectedRow(), 2));
+					deletePrivateKeyRing(keyId);
+				}
+			}
+		});
+		
+		exportKeyRingButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				// check for selected row first
+				if (jtKeyRingTable.getSelectedRow() != -1) {
+				
+					long keyId = Long.parseLong((String) keyRingTableModel.getValueAt(jtKeyRingTable.getSelectedRow(), 2));
+					exportPrivateKeyRing(keyId);
 				}
 			}
 		});
@@ -308,6 +341,14 @@ public class Application extends JFrame {
 			
 			this.privateKeyRingTableModel.addRow(privateKeyRingTableRow);
 		}
+		
+	}
+	
+	private void deletePrivateKeyRing(long keyId) {
+		
+	}
+	
+	private void exportPrivateKeyRing(long keyId) {
 		
 	}
 
