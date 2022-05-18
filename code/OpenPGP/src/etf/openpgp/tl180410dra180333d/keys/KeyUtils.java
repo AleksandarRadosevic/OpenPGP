@@ -361,7 +361,7 @@ public class KeyUtils {
 			
 			String pathToSave = null;
 			if(selectedExportPath!=null && selectedExportPath.length()>0) {
-				pathToSave = selectedExportPath + "\\data\\public_key_exported\\PublicKeyRing";
+				pathToSave = selectedExportPath + "\\PublicKeyRing";
 			}
 			else {
 				pathToSave = packageRootPath + "/data/public_key_exported/PublicKeyRing";

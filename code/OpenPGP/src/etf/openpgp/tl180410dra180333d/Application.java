@@ -257,20 +257,19 @@ public class Application extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				// check for selected row first
 				if (jtKeyRingTable.getSelectedRow() != -1) {
-					String selectedExportPath = exportDialog();
-					if(selectedExportPath == null) {
-						
-						System.out.println("odustao");
+
+					KEY_RING_TYPE ringType = (table_to_initialize == INITIALIZE_TABLE.PRIVATE_RING_TABLE)
+							? KEY_RING_TYPE.PRIVATE_KEY_RING
+							: KEY_RING_TYPE.PUBLIC_KEY_RING;
+
+					String selectedExportPath = exportDialog(ringType);
+					if (selectedExportPath == null) {
 						return;
 					}
 
 					String keyIdStr = (String) keyRingTableModel.getValueAt(jtKeyRingTable.getSelectedRow(), 2);
 					long keyId = new BigInteger(keyIdStr, 16).longValue();
-					if (table_to_initialize == INITIALIZE_TABLE.PRIVATE_RING_TABLE) {
-						exportKeyRing(keyId, KEY_RING_TYPE.PRIVATE_KEY_RING, selectedExportPath);
-					} else {
-						exportKeyRing(keyId, KEY_RING_TYPE.PUBLIC_KEY_RING, selectedExportPath);
-					}
+					exportKeyRing(keyId, ringType, selectedExportPath);
 				}
 			}
 		});
@@ -334,7 +333,7 @@ public class Application extends JFrame {
 				String encryptionAlgorithm = (String) jcbEncryptionAlgorithm.getSelectedItem();
 				boolean ret = insertNewPrivateKeyRing(name, email, signAlgorithm, encryptionAlgorithm);
 				if (!ret) {
-					JOptionPane.showMessageDialog(new JFrame(),
+					JOptionPane.showMessageDialog(Application.this,
 							"Nije uspelo dodavanje kljuca, sva polja su obavezna kao i passphrase za cuvanje privatnog kljuca!",
 							"Greska pri dodavanju kljuca", JOptionPane.ERROR_MESSAGE);
 				}
@@ -404,7 +403,7 @@ public class Application extends JFrame {
 		if (encryptionAlgorithm == null || encryptionAlgorithm.length() == 0)
 			return false;
 
-		String passphrase = JOptionPane.showInputDialog(new JFrame(), "Enter passphrase to protect your private key");
+		String passphrase = JOptionPane.showInputDialog(this, "Enter passphrase to protect your private key");
 		if (passphrase == null || passphrase.length() == 0) {
 			return false;
 		}
@@ -495,30 +494,25 @@ public class Application extends JFrame {
 	// key ring operations
 	private void deleteKeyRing(long keyId, KEY_RING_TYPE expecting_keyRing) {
 
-		boolean ret=false;
+		boolean ret = false;
 
 		if (expecting_keyRing == KEY_RING_TYPE.PRIVATE_KEY_RING) {
-			String passphrase = JOptionPane.showInputDialog(new JFrame(),
-					"Enter passphrase used to protect your private key");
+			String passphrase = JOptionPane.showInputDialog(this, "Enter passphrase used to protect your private key");
 			if (passphrase == null || passphrase.length() == 0) {
-				JOptionPane.showMessageDialog(new JFrame(),
+				JOptionPane.showMessageDialog(this,
 						"Key from private key ring collection can't be deleted without passphrase!",
 						"Error - key can't be deleted", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 			ret = this.keyUtils.deletePrivateKeyRing(keyId, passphrase);
-		}
-		else {
+		} else {
 			ret = this.keyUtils.deletePublicKeyRing(keyId);
 		}
-		
-		
+
 		if (!ret) {
-			JOptionPane.showMessageDialog(new JFrame(), "Key isn't deletes!", "Delete error",
-					JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, "Key isn't deletes!", "Delete error", JOptionPane.ERROR_MESSAGE);
 		} else {
-			JOptionPane.showMessageDialog(new JFrame(), "Selected key is deleted!", "Success",
-					JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(this, "Selected key is deleted!", "Success", JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 
@@ -530,10 +524,10 @@ public class Application extends JFrame {
 			ret = keyUtils.exportPublicKeyRing(keyId, selectedExportPath);
 		}
 		if (!ret) {
-			JOptionPane.showMessageDialog(new JFrame(), "Exporting key is not successful!", "Export error",
+			JOptionPane.showMessageDialog(this, "Exporting key is not successful!", "Export error",
 					JOptionPane.ERROR_MESSAGE);
 		} else {
-			JOptionPane.showMessageDialog(new JFrame(), "Exporting key is successful!", "Success",
+			JOptionPane.showMessageDialog(this, "Exporting key is successful!", "Success",
 					JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
@@ -560,40 +554,39 @@ public class Application extends JFrame {
 						ret = keyUtils.importPublicKeyRing(selectedFile);
 					}
 					if (ret == IMPORT_OPERATION_RESULT.SUCCESS) {
-						JOptionPane.showMessageDialog(new JFrame(), "Importing file is successful!", "Success",
+						JOptionPane.showMessageDialog(this, "Importing file is successful!", "Success",
 								JOptionPane.INFORMATION_MESSAGE);
 						return;
 					} else if (ret == IMPORT_OPERATION_RESULT.KEY_EXISTS) {
-						JOptionPane.showMessageDialog(new JFrame(), "Key Ring already exists in table!",
-								"Duplicate error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(this, "Key Ring already exists in table!", "Duplicate error",
+								JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 				} else {
-					JOptionPane.showMessageDialog(new JFrame(), "File extension must be asc!", "Extension error",
+					JOptionPane.showMessageDialog(this, "File extension must be asc!", "Extension error",
 							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 			}
 		} else if (result != fileChooser.CANCEL_OPTION) {
-			JOptionPane.showMessageDialog(new JFrame(), "Importing key is not successful!", "Import error",
+			JOptionPane.showMessageDialog(this, "Importing key is not successful!", "Import error",
 					JOptionPane.ERROR_MESSAGE);
 		}
 
 	}
-	
-	
-	private String exportDialog() {
+
+	private String exportDialog(KEY_RING_TYPE ringType) {
 		JFileChooser choose_where_to_export = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-		choose_where_to_export.setDialogTitle("Export key from "+""+" ring collection");
+		choose_where_to_export.setDialogTitle("Export key from "
+				+ ((ringType == KEY_RING_TYPE.PRIVATE_KEY_RING) ? "private" : "public") + " key ring collection");
 		choose_where_to_export.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		int ret=choose_where_to_export.showDialog(new JFrame(),"Save");
-		if(ret==JFileChooser.APPROVE_OPTION) {
+		int ret = choose_where_to_export.showDialog(this, "Export");
+		if (ret == JFileChooser.APPROVE_OPTION) {
 			Path path = Paths.get(choose_where_to_export.getSelectedFile().getAbsolutePath());
-			return path.toString();		
+			return path.toString();
 		}
 		return null;
 	}
-
 
 	public static void main(String[] args) {
 		Application app = new Application();
