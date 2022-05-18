@@ -269,8 +269,11 @@ public class Application extends JFrame {
 					}
 
 					String keyIdStr = (String) keyRingTableModel.getValueAt(jtKeyRingTable.getSelectedRow(), 2);
+					String userId = (String) keyRingTableModel.getValueAt(jtKeyRingTable.getSelectedRow(), 1);
+					userId = userId.split("<")[0].replace(' ','_');				
+					userId = userId.substring(0,userId.length()-1);
 					long keyId = new BigInteger(keyIdStr, 16).longValue();
-					exportKeyRing(keyId, ringType, selectedExportPath);
+					exportKeyRing(keyId,userId, ringType, selectedExportPath);
 				}
 			}
 		});
@@ -517,12 +520,12 @@ public class Application extends JFrame {
 		}
 	}
 
-	private void exportKeyRing(long keyId, KEY_RING_TYPE expecting_ring, String selectedExportPath) {
+	private void exportKeyRing(long keyId,String userId, KEY_RING_TYPE expecting_ring, String selectedExportPath) {
 		boolean ret;
 		if (expecting_ring == KEY_RING_TYPE.PRIVATE_KEY_RING) {
-			ret = keyUtils.exportPrivateKeyRing(keyId, selectedExportPath);
+			ret = keyUtils.exportPrivateKeyRing(keyId,userId, selectedExportPath);
 		} else {
-			ret = keyUtils.exportPublicKeyRing(keyId, selectedExportPath);
+			ret = keyUtils.exportPublicKeyRing(keyId,userId, selectedExportPath);
 		}
 		if (!ret) {
 			JOptionPane.showMessageDialog(this, "Exporting key is not successful!", "Export error",

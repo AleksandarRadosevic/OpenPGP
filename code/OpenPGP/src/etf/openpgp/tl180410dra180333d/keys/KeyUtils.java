@@ -246,16 +246,16 @@ public class KeyUtils {
 		return true;
 	}
 
-	public boolean exportPrivateKeyRing(long keyId, String selectedExportPath) {
+	public boolean exportPrivateKeyRing(long keyId, String userId, String selectedExportPath) {
 		PGPSecretKeyRing secretKeyRing;
 		try {
 			secretKeyRing = this.privateKeyRingCollection.getSecretKeyRing(keyId);
 			String pathToSave = null;
 			if(selectedExportPath!=null && selectedExportPath.length()>0) {
-				pathToSave = selectedExportPath + "\\PrivateKeyRing";
+				pathToSave = selectedExportPath + "\\Private_"+userId+"_";
 			}
 			else {
-				pathToSave = Application.packageRootPath + "/data/private_key_exported/PrivateKeyRing";
+				pathToSave = Application.packageRootPath + "/data/private_key_exported/Private_"+userId+"_";
 			}
 			pathToSave = pathToSave + (new Date()).getTime()+ ".asc";
 			File fileToSave = new File(pathToSave);
@@ -347,17 +347,17 @@ public class KeyUtils {
 		return IMPORT_OPERATION_RESULT.FAILURE;
 	}
 
-	public boolean exportPublicKeyRing(long keyId, String selectedExportPath) {
+	public boolean exportPublicKeyRing(long keyId, String userId, String selectedExportPath) {
 		PGPPublicKeyRing publicKeyRing;
 		try {
 			publicKeyRing = this.publicKeyRingCollection.getPublicKeyRing(keyId);
 			
 			String pathToSave = null;
 			if(selectedExportPath!=null && selectedExportPath.length()>0) {
-				pathToSave = selectedExportPath + "\\PublicKeyRing";
+				pathToSave = selectedExportPath + "\\Public_"+userId+"_";
 			}
 			else {
-				pathToSave = Application.packageRootPath + "/data/public_key_exported/PublicKeyRing";
+				pathToSave = Application.packageRootPath + "/data/public_key_exported/Public_"+userId+"_";
 			}
 			pathToSave = pathToSave + (new Date()).getTime()+ ".asc";
 			File fileToSave = new File(pathToSave);
