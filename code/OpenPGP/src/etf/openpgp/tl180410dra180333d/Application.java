@@ -95,12 +95,31 @@ public class Application extends JFrame {
 		privateKeyRingPanel.add(jpAddNewPrivateRingKeyForm, BorderLayout.NORTH);
 
 		JPanel jpControls = new JPanel();
-		jpControls.setLayout(new GridLayout(1, 2));
+		jpControls.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.weightx = 1;
+		c.weighty = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		
+		c.gridy = 0;
+		c.gridx = 0;
+		c.gridwidth=2;
+		int top = 5;
+		int left = 10;
+		int bottom = 5;
+		int right = 10;
+		c.insets = new Insets(top, left, bottom, right);
+		JButton importPrivateKeyRingButton = new JButton("IMPORT PRIVATE KEY RING");
+		jpControls.add(importPrivateKeyRingButton, c);
 
+		c.gridwidth=1;
+		c.gridy=1;
 		JButton exportPrivateKeyRingButton = new JButton("EXPORT SELECTED PRIVATE KEY RING");
-		jpControls.add(exportPrivateKeyRingButton, 0);
+		jpControls.add(exportPrivateKeyRingButton, c);
+		
+		c.gridx=1;
 		JButton deletePrivateKeyRingButton = new JButton("DELETE SELECTED PRIVATE KEY RING");
-		jpControls.add(deletePrivateKeyRingButton, 1);
+		jpControls.add(deletePrivateKeyRingButton, c);
 
 		privateKeyRingPanel.add(jpControls, BorderLayout.SOUTH);
 

@@ -119,7 +119,7 @@ public class KeyUtils {
 
 			this.privateKeyRingCollection = PGPSecretKeyRingCollection.addSecretKeyRing(this.privateKeyRingCollection,
 					privateKeyRing);
-
+			
 			return this.savePrivateKeyRing();
 
 		} catch (PGPException e) {
