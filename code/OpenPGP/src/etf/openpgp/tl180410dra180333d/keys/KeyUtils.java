@@ -1,6 +1,8 @@
 package etf.openpgp.tl180410dra180333d.keys;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -15,12 +17,14 @@ import java.util.LinkedList;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.openpgp.*;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
+import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
@@ -30,18 +34,14 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import etf.openpgp.tl180410dra180333d.Application;
 
 public class KeyUtils {
-	private static final String packageRootPath = "./src/etf/openpgp/tl180410dra180333d/";
-
+	private static final String packageRootPath = "./src/etf/openpgp/tl180410dra180333d/";	
+	private final File privateKeyRingCollectionFile = new File(
+			KeyUtils.packageRootPath + "/data/private_key_ring_collection.asc");
+	private final File publicKeyRingCollectionFile = new File(
+			KeyUtils.packageRootPath + "/data/public_key_ring_collection.asc");
+	
 	private PGPSecretKeyRingCollection privateKeyRingCollection;
 	private PGPPublicKeyRingCollection publicKeyRingCollection;
-	private static final File privateKeyRingCollectionFile = new File(
-			KeyUtils.packageRootPath + "/data/private_key_ring_collection.asc");
-	// private static final String privateKeyRingCollectionPath =
-	// "./data/private_key_ring_collection.asc";
-	private static final File publicKeyRingCollectionFile = new File(
-			KeyUtils.packageRootPath + "/data/public_key_ring_collection.asc");
-	// private static final String publicKeyRingCollectionPath =
-	// "./data/public_key_ring_collection.asc";
 
 	private Application application = null;
 
@@ -50,13 +50,36 @@ public class KeyUtils {
 			this.publicKeyRingCollection = new PGPPublicKeyRingCollection(new LinkedList<>());
 			this.privateKeyRingCollection = new PGPSecretKeyRingCollection(new LinkedList<>());
 			this.application = application;
+			
+			this.loadKeyRingCollections();
+			this.application.update_privateKeyRingTableModel(this.privateKeyRingCollection);
+			this.application.update_publicKeyRingTableModel(this.publicKeyRingCollection);
+			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (PGPException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	private void loadKeyRingCollections() {
+		try {
+			this.privateKeyRingCollection = new PGPSecretKeyRingCollection(new ArmoredInputStream(new FileInputStream(this.privateKeyRingCollectionFile)), new JcaKeyFingerprintCalculator());
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (PGPException e) {
+			e.printStackTrace();
+		}
+		/*try {
+			this.publicKeyRingCollection = 	new PGPPublicKeyRingCollection(new ArmoredInputStream(new FileInputStream(this.publicKeyRingCollectionFile)), new JcaKeyFingerprintCalculator());
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (PGPException e) {
+			e.printStackTrace();
+		}*/
 	}
 
 	public boolean generatePrivateRingKey(String userId, String signAlgorithm, String encryptionAlgorithm,
@@ -132,14 +155,32 @@ public class KeyUtils {
 
 	private boolean savePrivateKeyRing() {
 		try {
-			KeyUtils.privateKeyRingCollectionFile.createNewFile();// create file if it doesn't exist
+			this.privateKeyRingCollectionFile.createNewFile();// create file if it doesn't exist
 		} catch (IOException e1) {
 			e1.printStackTrace();
 			return false;
 		}
 		try (OutputStream securedOutputStream = new ArmoredOutputStream(
-				new FileOutputStream(KeyUtils.privateKeyRingCollectionFile, false))) {
+				new FileOutputStream(this.privateKeyRingCollectionFile, false))) {
 			this.privateKeyRingCollection.encode(securedOutputStream);
+			this.application.update_privateKeyRingTableModel(privateKeyRingCollection);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean savePublicKeyRing() {
+		try {
+			this.publicKeyRingCollectionFile.createNewFile();// create file if it doesn't exist
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			return false;
+		}
+		try (OutputStream securedOutputStream = new ArmoredOutputStream(
+				new FileOutputStream(this.privateKeyRingCollectionFile, false))) {
+			this.publicKeyRingCollection.encode(securedOutputStream);
 			this.application.update_privateKeyRingTableModel(privateKeyRingCollection);
 		} catch (Exception e) {
 			e.printStackTrace();

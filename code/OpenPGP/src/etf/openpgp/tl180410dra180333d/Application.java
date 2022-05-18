@@ -9,6 +9,8 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.math.BigInteger;
 import java.security.Security;
@@ -31,6 +33,8 @@ import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
@@ -53,14 +57,21 @@ public class Application extends JFrame {
 
 	public Application() {
 		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-		this.keyUtils = new KeyUtils(this);
 
 		this.setTitle("OpenPGP App");
 		this.setSize(1080, 720);
 
 		this.initialization();
-
+		
+		this.keyUtils = new KeyUtils(this);
 		this.setVisible(true);
+		
+		// when user close program on X
+	    this.addWindowListener(new WindowAdapter() {
+	        public void windowClosing(WindowEvent e) {
+	            dispose();
+	        }
+	    });
 	}
 
 	/**
@@ -117,17 +128,17 @@ public class Application extends JFrame {
 		int bottom = 5;
 		int right = 10;
 		c.insets = new Insets(top, left, bottom, right);
-		JButton importPrivateKeyRingButton = new JButton("IMPORT PRIVATE KEY RING");
-		jpControls.add(importPrivateKeyRingButton, c);
+		JButton deletePrivateKeyRingButton = new JButton("DELETE SELECTED KEY FROM PRIVATE KEY RING");
+		jpControls.add(deletePrivateKeyRingButton, c);
 
 		c.gridwidth=1;
 		c.gridy=1;
-		JButton exportPrivateKeyRingButton = new JButton("EXPORT SELECTED PRIVATE KEY RING");
+		JButton exportPrivateKeyRingButton = new JButton("EXPORT SELECTED KEY FROM PRIVATE KEY RING");
 		jpControls.add(exportPrivateKeyRingButton, c);
 		
 		c.gridx=1;
-		JButton deletePrivateKeyRingButton = new JButton("DELETE SELECTED PRIVATE KEY RING");
-		jpControls.add(deletePrivateKeyRingButton, c);
+		JButton importPrivateKeyRingButton = new JButton("IMPORT KEY TO PRIVATE KEY RING");
+		jpControls.add(importPrivateKeyRingButton, c);
 		
 		//panel for showing import button, export button, delete button
 		//end
@@ -162,25 +173,25 @@ public class Application extends JFrame {
 		int bottom = 5;
 		int right = 10;
 		c.insets = new Insets(top, left, bottom, right);
-		
-		JButton importPublicKeyRingButton = new JButton("IMPORT PRIVATE KEY RING");
-		jpControls.add(importPublicKeyRingButton, c);
+		JButton deletePublicKeyRingButton = new JButton("DELETE SELECTED KEY FROM PUBLIC KEY RING");
+		jpControls.add(deletePublicKeyRingButton, c);
 
 		c.gridwidth=1;
 		c.gridy=1;
 		
-		JButton exportPublicKeyRingButton = new JButton("EXPORT SELECTED PUBLIC KEY RING");
+		JButton exportPublicKeyRingButton = new JButton("EXPORT SELECTED KEY FROM PUBLIC KEY RING");
 		jpControls.add(exportPublicKeyRingButton, c);
 		
 		c.gridx=1;
-		JButton deletePublicKeyRingButton = new JButton("DELETE SELECTED PUBLIC KEY RING");
-		jpControls.add(deletePublicKeyRingButton, c);
+		JButton importPublicKeyRingButton = new JButton("IMPORT KEY TO PUBLIC RING");
+		jpControls.add(importPublicKeyRingButton, c);
+
 		
 		//end panel
 		
 		publicKeyRingPanel.add(jpControls, BorderLayout.SOUTH);
 
-		String[] columnLabels = { "Timestamp", "User ID", "Key ID", "Public Key" };
+		String[] columnLabels = { "Timestamp", "User ID", "Key ID" };
 		this.publicKeyRingTableModel = this.initialize_keyRingTable(publicKeyRingPanel, columnLabels,
 				deletePublicKeyRingButton, exportPublicKeyRingButton,importPublicKeyRingButton);
 
@@ -409,6 +420,46 @@ public class Application extends JFrame {
 		}
 
 	}
+	
+	public void update_publicKeyRingTableModel(PGPPublicKeyRingCollection publicKeyRingCollection) {
+		this.publicKeyRingTableModel.setRowCount(0); // clear table model
+
+		Iterator<PGPPublicKeyRing> publicKeyRingIterator = publicKeyRingCollection.getKeyRings();
+
+		while (publicKeyRingIterator.hasNext()) {
+			PGPPublicKeyRing publicKeyRing = publicKeyRingIterator.next();
+
+			Iterator<PGPPublicKey> publicKeyIterator = publicKeyRing.getPublicKeys();
+
+			// we are sure that we have two keys in ring, one for sign and one for
+			// encryption
+			if (!publicKeyIterator.hasNext()) {
+				System.err.println("U prstenu javnog kljuca nema kljuca za potpisivanje!");
+				break;
+			}
+			PGPPublicKey signKey = publicKeyIterator.next();
+
+			if (!publicKeyIterator.hasNext()) {
+				System.err.println("U prstenu javnog kljuca nema kljuca za enkripciju!");
+				break;
+			}
+			PGPPublicKey encryptionKey = publicKeyIterator.next();
+
+			long singnKeyId = signKey.getKeyID(); // this key id is used to be shown in key ring table
+			// long encriptionKeyId = encryptionKey.getKeyID();
+
+			String keyOwner = signKey.getUserIDs().next();
+
+			Date creationDate = signKey.getCreationTime();
+
+			String[] publicKeyRingTableRow = new String[] { creationDate.toString(), keyOwner,
+					String.format("%016x", singnKeyId).toUpperCase() };
+
+			this.publicKeyRingTableModel.addRow(publicKeyRingTableRow);
+		}
+
+	}
+	
 
 	private void deletePrivateKeyRing(long keyId) {
 		String passphrase = JOptionPane.showInputDialog(new JFrame(),
