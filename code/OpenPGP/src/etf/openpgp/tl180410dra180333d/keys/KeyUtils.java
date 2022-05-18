@@ -179,9 +179,9 @@ public class KeyUtils {
 			return false;
 		}
 		try (OutputStream securedOutputStream = new ArmoredOutputStream(
-				new FileOutputStream(this.privateKeyRingCollectionFile, false))) {
+				new FileOutputStream(this.publicKeyRingCollectionFile, false))) {
 			this.publicKeyRingCollection.encode(securedOutputStream);
-			this.application.update_privateKeyRingTableModel(privateKeyRingCollection);
+			this.application.update_publicKeyRingTableModel(this.publicKeyRingCollection);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
