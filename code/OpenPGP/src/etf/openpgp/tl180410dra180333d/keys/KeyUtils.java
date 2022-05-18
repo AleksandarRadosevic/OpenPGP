@@ -192,6 +192,11 @@ public class KeyUtils {
 			e1.printStackTrace();
 		}
 		return false;
-
+	}
+	
+	public boolean importPrivateKeyRing(File file) {
+		
+		
+		return false;
 	}
 }

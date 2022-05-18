@@ -9,6 +9,7 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.math.BigInteger;
 import java.security.Security;
 import java.util.Date;
@@ -16,6 +17,7 @@ import java.util.Iterator;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -24,6 +26,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -95,6 +99,10 @@ public class Application extends JFrame {
 		privateKeyRingPanel.add(jpAddNewPrivateRingKeyForm, BorderLayout.NORTH);
 
 		JPanel jpControls = new JPanel();
+		
+		//begin
+		//panel for showing import button, export button, delete button
+		
 		jpControls.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.weightx = 1;
@@ -120,36 +128,66 @@ public class Application extends JFrame {
 		c.gridx=1;
 		JButton deletePrivateKeyRingButton = new JButton("DELETE SELECTED PRIVATE KEY RING");
 		jpControls.add(deletePrivateKeyRingButton, c);
-
+		
+		//panel for showing import button, export button, delete button
+		//end
+		
 		privateKeyRingPanel.add(jpControls, BorderLayout.SOUTH);
 
 		String[] columnLabels = { "Timestamp", "User ID", "Sign Key ID" };
 		this.privateKeyRingTableModel = this.initialize_keyRingTable(privateKeyRingPanel, columnLabels,
-				deletePrivateKeyRingButton, exportPrivateKeyRingButton);
+				deletePrivateKeyRingButton, exportPrivateKeyRingButton,importPrivateKeyRingButton);
 	}
 
 	private void initialize_publicKeyRingPanel(JPanel publicKeyRingPanel) {
 
 		publicKeyRingPanel.setLayout(new BorderLayout());
 
+		//begin
+		//panel for showing import button, export button, delete button
+		
 		JPanel jpControls = new JPanel();
-		jpControls.setLayout(new GridLayout(1, 2));
+		jpControls.setLayout(new GridBagLayout());
 
+		GridBagConstraints c = new GridBagConstraints();
+		c.weightx = 1;
+		c.weighty = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		
+		c.gridy = 0;
+		c.gridx = 0;
+		c.gridwidth=2;
+		int top = 5;
+		int left = 10;
+		int bottom = 5;
+		int right = 10;
+		c.insets = new Insets(top, left, bottom, right);
+		
+		JButton importPublicKeyRingButton = new JButton("IMPORT PRIVATE KEY RING");
+		jpControls.add(importPublicKeyRingButton, c);
+
+		c.gridwidth=1;
+		c.gridy=1;
+		
 		JButton exportPublicKeyRingButton = new JButton("EXPORT SELECTED PUBLIC KEY RING");
-		jpControls.add(exportPublicKeyRingButton, 0);
+		jpControls.add(exportPublicKeyRingButton, c);
+		
+		c.gridx=1;
 		JButton deletePublicKeyRingButton = new JButton("DELETE SELECTED PUBLIC KEY RING");
-		jpControls.add(deletePublicKeyRingButton, 1);
-
+		jpControls.add(deletePublicKeyRingButton, c);
+		
+		//end panel
+		
 		publicKeyRingPanel.add(jpControls, BorderLayout.SOUTH);
 
 		String[] columnLabels = { "Timestamp", "User ID", "Key ID", "Public Key" };
 		this.publicKeyRingTableModel = this.initialize_keyRingTable(publicKeyRingPanel, columnLabels,
-				deletePublicKeyRingButton, exportPublicKeyRingButton);
+				deletePublicKeyRingButton, exportPublicKeyRingButton,importPublicKeyRingButton);
 
 	}
 
 	private DefaultTableModel initialize_keyRingTable(JPanel keyRingPanel, String[] columnLabels,
-			JButton deleteKeyRingButton, JButton exportKeyRingButton) {
+			JButton deleteKeyRingButton, JButton exportKeyRingButton,JButton importKeyRingButton) {
 
 		JTable jtKeyRingTable = new JTable();
 		jtKeyRingTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
@@ -198,6 +236,13 @@ public class Application extends JFrame {
 			}
 		});
 
+		importKeyRingButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				importPrivateKeyRing();
+			}
+		});
 		return keyRingTableModel;
 	}
 
@@ -395,6 +440,43 @@ public class Application extends JFrame {
 		}
 	}
 
+	private void importPrivateKeyRing() {
+		JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+		fileChooser.setDialogTitle("Import file");
+		fileChooser.setFileFilter(new FileNameExtensionFilter(
+                "Asc files", "asc"));
+        int result = fileChooser.showOpenDialog(this);
+        if (result == fileChooser.APPROVE_OPTION) {
+        	File selectedFile = fileChooser.getSelectedFile();
+
+        	// check extension of file
+        	
+	        String fileName = selectedFile.toString();
+	        int index = fileName.lastIndexOf('.');
+	        if(index > 0) {
+	          String extension = fileName.substring(index + 1);
+	          if (extension.equals("asc")) {
+	        	  boolean ret = keyUtils.importPrivateKeyRing(selectedFile);
+	        	  if (ret == true) {
+	        		  JOptionPane.showMessageDialog(new JFrame(), "Importing file is successful!", "Success",
+	  	  					JOptionPane.INFORMATION_MESSAGE);
+	        		  return;
+	        	  }
+	          }
+	          else {
+	        	  JOptionPane.showMessageDialog(new JFrame(), "File extension must be asc!", "Extension error",
+	  					JOptionPane.ERROR_MESSAGE);
+	        	  return;
+	          }
+	        }
+        }
+        else {
+        	JOptionPane.showMessageDialog(new JFrame(), "Importing key is not successful!", "Import error",
+					JOptionPane.ERROR_MESSAGE);
+        }
+				
+		
+	}
 	public static void main(String[] args) {
 		Application app = new Application();
 	}
