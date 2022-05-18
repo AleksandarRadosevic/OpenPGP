@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -31,7 +30,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -51,6 +49,9 @@ import etf.openpgp.tl180410dra180333d.keys.OperationResult.IMPORT_OPERATION_RESU
  * 
  */
 public class Application extends JFrame {
+	
+	public static final String packageRootPath = "./src/etf/openpgp/tl180410dra180333d/";
+	public static final String dataRootPath = Application.packageRootPath + "/data";
 
 	private static final String[] asymmetricEncryptionAlgorithms = { "ElGamal 1024", "ElGamal 2048", "ElGamal 4096" };
 	private static final String[] asymmetricSignAlgorithms = { "DSA 1024", "DSA 2048" };
@@ -533,11 +534,11 @@ public class Application extends JFrame {
 	}
 
 	private void importKeyRing(KEY_RING_TYPE expecting_ring) {
-		JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+		JFileChooser fileChooser = new JFileChooser(Application.dataRootPath);
 		fileChooser.setDialogTitle("Import file");
 		fileChooser.setFileFilter(new FileNameExtensionFilter("Asc files", "asc"));
 		int result = fileChooser.showOpenDialog(this);
-		if (result == fileChooser.APPROVE_OPTION) {
+		if (result == JFileChooser.APPROVE_OPTION) {
 			File selectedFile = fileChooser.getSelectedFile();
 
 			// check extension of file
@@ -568,7 +569,7 @@ public class Application extends JFrame {
 					return;
 				}
 			}
-		} else if (result != fileChooser.CANCEL_OPTION) {
+		} else if (result != JFileChooser.CANCEL_OPTION) {
 			JOptionPane.showMessageDialog(this, "Importing key is not successful!", "Import error",
 					JOptionPane.ERROR_MESSAGE);
 		}
@@ -576,7 +577,7 @@ public class Application extends JFrame {
 	}
 
 	private String exportDialog(KEY_RING_TYPE ringType) {
-		JFileChooser choose_where_to_export = new JFileChooser("./src/etf/openpgp/tl180410dra180333d/data");
+		JFileChooser choose_where_to_export = new JFileChooser(Application.dataRootPath);
 		choose_where_to_export.setDialogTitle("Export key from "
 				+ ((ringType == KEY_RING_TYPE.PRIVATE_KEY_RING) ? "private" : "public") + " key ring collection");
 		choose_where_to_export.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);

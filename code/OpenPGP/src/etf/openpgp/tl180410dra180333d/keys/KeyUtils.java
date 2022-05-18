@@ -39,11 +39,11 @@ import etf.openpgp.tl180410dra180333d.Application;
 import etf.openpgp.tl180410dra180333d.keys.OperationResult.IMPORT_OPERATION_RESULT;
 
 public class KeyUtils {
-	private static final String packageRootPath = "./src/etf/openpgp/tl180410dra180333d/";
+
 	private final File privateKeyRingCollectionFile = new File(
-			KeyUtils.packageRootPath + "/data/private_key_ring_collection.asc");
+			Application.packageRootPath + "/data/private_key_ring_collection.asc");
 	private final File publicKeyRingCollectionFile = new File(
-			KeyUtils.packageRootPath + "/data/public_key_ring_collection.asc");
+			Application.packageRootPath + "/data/public_key_ring_collection.asc");
 
 	private PGPSecretKeyRingCollection privateKeyRingCollection;
 	private PGPPublicKeyRingCollection publicKeyRingCollection;
@@ -170,8 +170,8 @@ public class KeyUtils {
 				elGamalKeyPairGenerator.initialize(keySize);
 			}
 			else {
-				BigInteger primeModulous = this.getPrime4096();
-				BigInteger baseGenerator = this.getBaseGenerator();
+				BigInteger primeModulous = KeyUtils.getPrime4096();
+				BigInteger baseGenerator = KeyUtils.getBaseGenerator();
 				ElGamalParameterSpec paramSpecs = new ElGamalParameterSpec(primeModulous, baseGenerator);
 				elGamalKeyPairGenerator.initialize(paramSpecs);
 			}
@@ -255,7 +255,7 @@ public class KeyUtils {
 				pathToSave = selectedExportPath + "\\PrivateKeyRing";
 			}
 			else {
-				pathToSave = packageRootPath + "/data/private_key_exported/PrivateKeyRing";
+				pathToSave = Application.packageRootPath + "/data/private_key_exported/PrivateKeyRing";
 			}
 			pathToSave = pathToSave + (new Date()).getTime()+ ".asc";
 			File fileToSave = new File(pathToSave);
@@ -311,14 +311,7 @@ public class KeyUtils {
 	// public key rings operations start
 	public boolean deletePublicKeyRing(long publicKeyRingId) {
 		try {
-			PGPPublicKeyRing publicKeyRing = this.publicKeyRingCollection.getPublicKeyRing(publicKeyRingId);
-			Iterator<PGPPublicKey> publicKeyIterator = publicKeyRing.getPublicKeys();
-
-			// we are sure that we have dsa and elgamal keys in privateKeyRing
-			PGPPublicKey signKey = publicKeyIterator.next();
-
-			// check passphrase
-			
+			PGPPublicKeyRing publicKeyRing = this.publicKeyRingCollection.getPublicKeyRing(publicKeyRingId);			
 			this.publicKeyRingCollection = PGPPublicKeyRingCollection
 					.removePublicKeyRing(this.publicKeyRingCollection, publicKeyRing);
 			this.savePublicKeyRing();
@@ -364,7 +357,7 @@ public class KeyUtils {
 				pathToSave = selectedExportPath + "\\PublicKeyRing";
 			}
 			else {
-				pathToSave = packageRootPath + "/data/public_key_exported/PublicKeyRing";
+				pathToSave = Application.packageRootPath + "/data/public_key_exported/PublicKeyRing";
 			}
 			pathToSave = pathToSave + (new Date()).getTime()+ ".asc";
 			File fileToSave = new File(pathToSave);
