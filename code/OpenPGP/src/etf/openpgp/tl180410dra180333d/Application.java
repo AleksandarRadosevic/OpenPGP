@@ -56,7 +56,14 @@ public class Application extends JFrame {
 	private DefaultTableModel privateKeyRingTableModel = null;
 	private DefaultTableModel publicKeyRingTableModel = null;
 	private KeyUtils keyUtils = null;
-
+	private static enum INITIALIZE_TABLE{
+		PRIVATE_RING_TABLE,
+		PUBLIC_RING_TABLE
+	}
+	private static enum KEY_RING_TYPE{
+		PRIVATE_KEY_RING,
+		PUBLIC_KEY_RING
+	}
 	public Application() {
 		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 
@@ -149,7 +156,7 @@ public class Application extends JFrame {
 
 		String[] columnLabels = { "Timestamp", "User ID", "Sign Key ID" };
 		this.privateKeyRingTableModel = this.initialize_keyRingTable(privateKeyRingPanel, columnLabels,
-				deletePrivateKeyRingButton, exportPrivateKeyRingButton, importPrivateKeyRingButton);
+				deletePrivateKeyRingButton, exportPrivateKeyRingButton, importPrivateKeyRingButton,INITIALIZE_TABLE.PRIVATE_RING_TABLE);
 	}
 
 	private void initialize_publicKeyRingPanel(JPanel publicKeyRingPanel) {
@@ -194,12 +201,12 @@ public class Application extends JFrame {
 
 		String[] columnLabels = { "Timestamp", "User ID", "Key ID" };
 		this.publicKeyRingTableModel = this.initialize_keyRingTable(publicKeyRingPanel, columnLabels,
-				deletePublicKeyRingButton, exportPublicKeyRingButton, importPublicKeyRingButton);
+				deletePublicKeyRingButton, exportPublicKeyRingButton, importPublicKeyRingButton,INITIALIZE_TABLE.PUBLIC_RING_TABLE);
 
 	}
 
 	private DefaultTableModel initialize_keyRingTable(JPanel keyRingPanel, String[] columnLabels,
-			JButton deleteKeyRingButton, JButton exportKeyRingButton, JButton importKeyRingButton) {
+			JButton deleteKeyRingButton, JButton exportKeyRingButton, JButton importKeyRingButton,INITIALIZE_TABLE table_to_initialize) {
 
 		JTable jtKeyRingTable = new JTable();
 		jtKeyRingTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
@@ -229,7 +236,12 @@ public class Application extends JFrame {
 
 					String keyIdStr = (String) keyRingTableModel.getValueAt(jtKeyRingTable.getSelectedRow(), 2);
 					long keyId = new BigInteger(keyIdStr, 16).longValue();
-					deletePrivateKeyRing(keyId);
+					if (table_to_initialize==INITIALIZE_TABLE.PRIVATE_RING_TABLE) {
+						deletePrivateKeyRing(keyId);
+					}
+					else {
+						deletePublicKeyRing(keyId);
+					}
 				}
 			}
 		});
@@ -243,7 +255,12 @@ public class Application extends JFrame {
 
 					String keyIdStr = (String) keyRingTableModel.getValueAt(jtKeyRingTable.getSelectedRow(), 2);
 					long keyId = new BigInteger(keyIdStr, 16).longValue();
-					exportPrivateKeyRing(keyId);
+					if (table_to_initialize==INITIALIZE_TABLE.PRIVATE_RING_TABLE) {
+						exportKeyRing(keyId,KEY_RING_TYPE.PRIVATE_KEY_RING);
+					}
+					else {
+						exportKeyRing(keyId,KEY_RING_TYPE.PUBLIC_KEY_RING);
+					}
 				}
 			}
 		});
@@ -252,7 +269,12 @@ public class Application extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				importPrivateKeyRing();
+				if (table_to_initialize==INITIALIZE_TABLE.PRIVATE_RING_TABLE) {
+					importKeyRing(KEY_RING_TYPE.PRIVATE_KEY_RING);
+				}
+				else {
+					importKeyRing(KEY_RING_TYPE.PUBLIC_KEY_RING);
+				}
 			}
 		});
 		return keyRingTableModel;
@@ -461,7 +483,8 @@ public class Application extends JFrame {
 		}
 
 	}
-
+	
+	// private ring table operations
 	private void deletePrivateKeyRing(long keyId) {
 		String passphrase = JOptionPane.showInputDialog(new JFrame(),
 				"Enter passphrase used to protect your private key");
@@ -481,8 +504,14 @@ public class Application extends JFrame {
 		}
 	}
 
-	private void exportPrivateKeyRing(long keyId) {
-		boolean ret = keyUtils.exportPrivateKeyRing(keyId);
+	private void exportKeyRing(long keyId,KEY_RING_TYPE expecting_ring) {
+		boolean ret;
+		if (expecting_ring==KEY_RING_TYPE.PRIVATE_KEY_RING) {
+			ret = keyUtils.exportPrivateKeyRing(keyId);
+		}
+		else {
+			ret = keyUtils.exportPublicKeyRing(keyId);
+		}
 		if (!ret) {
 			JOptionPane.showMessageDialog(new JFrame(), "Exporting key is not successful!", "Export error",
 					JOptionPane.ERROR_MESSAGE);
@@ -492,7 +521,7 @@ public class Application extends JFrame {
 		}
 	}
 
-	private void importPrivateKeyRing() {
+	private void importKeyRing(KEY_RING_TYPE expecting_ring) {
 		JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
 		fileChooser.setDialogTitle("Import file");
 		fileChooser.setFileFilter(new FileNameExtensionFilter("Asc files", "asc"));
@@ -507,13 +536,18 @@ public class Application extends JFrame {
 			if (index > 0) {
 				String extension = fileName.substring(index + 1);
 				if (extension.equals("asc")) {
-					OperationResult.IMPORT_OPERATION_RESULT ret = keyUtils.importPrivateKeyRing(selectedFile);
+					OperationResult.IMPORT_OPERATION_RESULT ret;
+					if (expecting_ring==KEY_RING_TYPE.PRIVATE_KEY_RING) {
+						ret = keyUtils.importPrivateKeyRing(selectedFile);
+					}
+					else {
+						ret = keyUtils.importPublicKeyRing(selectedFile);
+					}
 					if (ret == IMPORT_OPERATION_RESULT.SUCCESS) {
 						JOptionPane.showMessageDialog(new JFrame(), "Importing file is successful!", "Success",
 								JOptionPane.INFORMATION_MESSAGE);
 						return;
-					} else if (ret == IMPORT_OPERATION_RESULT.KEY_EXISTS) {
-						
+					} else if (ret == IMPORT_OPERATION_RESULT.KEY_EXISTS) {					
 						JOptionPane.showMessageDialog(new JFrame(), "Key Ring already exists in table!", "Duplicate error",
 								JOptionPane.ERROR_MESSAGE);
 						return;
@@ -528,6 +562,12 @@ public class Application extends JFrame {
 			JOptionPane.showMessageDialog(new JFrame(), "Importing key is not successful!", "Import error",
 					JOptionPane.ERROR_MESSAGE);
 		}
+
+	}
+	//end private ring table operations
+	
+	private void deletePublicKeyRing(long keyId) {
+		System.out.println("DELETE PUBLIC KEY RING TABLE");
 
 	}
 

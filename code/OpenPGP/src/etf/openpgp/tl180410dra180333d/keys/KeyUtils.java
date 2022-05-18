@@ -36,36 +36,39 @@ import etf.openpgp.tl180410dra180333d.Application;
 import etf.openpgp.tl180410dra180333d.keys.OperationResult.IMPORT_OPERATION_RESULT;
 
 public class KeyUtils {
-	private static final String packageRootPath = "./src/etf/openpgp/tl180410dra180333d/";	
+	private static final String packageRootPath = "./src/etf/openpgp/tl180410dra180333d/";
 	private final File privateKeyRingCollectionFile = new File(
 			KeyUtils.packageRootPath + "/data/private_key_ring_collection.asc");
 	private final File publicKeyRingCollectionFile = new File(
 			KeyUtils.packageRootPath + "/data/public_key_ring_collection.asc");
-	
+
 	private PGPSecretKeyRingCollection privateKeyRingCollection;
 	private PGPPublicKeyRingCollection publicKeyRingCollection;
 
 	private Application application = null;
-	
+
 	public KeyUtils(Application application) {
 		try {
 			this.publicKeyRingCollection = new PGPPublicKeyRingCollection(new LinkedList<>());
 			this.privateKeyRingCollection = new PGPSecretKeyRingCollection(new LinkedList<>());
 			this.application = application;
-			
+
 			this.loadKeyRingCollections();
 			this.application.update_privateKeyRingTableModel(this.privateKeyRingCollection);
 			this.application.update_publicKeyRingTableModel(this.publicKeyRingCollection);
-			
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (PGPException e) {
 			e.printStackTrace();
 		}
 	}
+
 	private void loadKeyRingCollections() {
 		try {
-			this.privateKeyRingCollection = new PGPSecretKeyRingCollection(new ArmoredInputStream(new FileInputStream(this.privateKeyRingCollectionFile)), new JcaKeyFingerprintCalculator());
+			this.privateKeyRingCollection = new PGPSecretKeyRingCollection(
+					new ArmoredInputStream(new FileInputStream(this.privateKeyRingCollectionFile)),
+					new JcaKeyFingerprintCalculator());
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -73,15 +76,13 @@ public class KeyUtils {
 		} catch (PGPException e) {
 			e.printStackTrace();
 		}
-		/*try {
-			this.publicKeyRingCollection = 	new PGPPublicKeyRingCollection(new ArmoredInputStream(new FileInputStream(this.publicKeyRingCollectionFile)), new JcaKeyFingerprintCalculator());
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (PGPException e) {
-			e.printStackTrace();
-		}*/
+		/*
+		 * try { this.publicKeyRingCollection = new PGPPublicKeyRingCollection(new
+		 * ArmoredInputStream(new FileInputStream(this.publicKeyRingCollectionFile)),
+		 * new JcaKeyFingerprintCalculator()); } catch (FileNotFoundException e) {
+		 * e.printStackTrace(); } catch (IOException e) { e.printStackTrace(); } catch
+		 * (PGPException e) { e.printStackTrace(); }
+		 */
 	}
 
 	public boolean generatePrivateRingKey(String userId, String signAlgorithm, String encryptionAlgorithm,
@@ -128,7 +129,9 @@ public class KeyUtils {
 			PGPDigestCalculator hashCalculator = new JcaPGPDigestCalculatorProviderBuilder().build()
 					.get(HashAlgorithmTags.SHA1);
 			PGPContentSignerBuilder signerBuilder = new JcaPGPContentSignerBuilder(
-					dsaKeyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA256); // we must change this because DSA 2048 requires 256 sign
+					dsaKeyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA256); // we must change this because
+																							// DSA 2048 requires 256
+																							// sign
 			PBESecretKeyEncryptor privateKeyEncriptor = new JcePBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_128,
 					hashCalculator).setProvider("BC").build(passphrase.toCharArray());
 
@@ -144,7 +147,7 @@ public class KeyUtils {
 
 			this.privateKeyRingCollection = PGPSecretKeyRingCollection.addSecretKeyRing(this.privateKeyRingCollection,
 					privateKeyRing);
-			
+
 			return this.savePrivateKeyRing();
 
 		} catch (PGPException e) {
@@ -172,7 +175,7 @@ public class KeyUtils {
 		}
 		return true;
 	}
-	
+
 	private boolean savePublicKeyRing() {
 		try {
 			this.publicKeyRingCollectionFile.createNewFile();// create file if it doesn't exist
@@ -190,6 +193,8 @@ public class KeyUtils {
 		}
 		return true;
 	}
+
+	// private key ring operations start
 
 	public boolean deletePrivateKeyRing(long privateKeyRingId, String passphrase) {
 		try {
@@ -220,8 +225,10 @@ public class KeyUtils {
 		PGPSecretKeyRing secretKeyRing;
 		try {
 			secretKeyRing = this.privateKeyRingCollection.getSecretKeyRing(keyId);
-			String pathToSave = packageRootPath + "/data/exportedPrivateKeyRing" + (new Date()).getTime() + ".asc";
+			String pathToSave = packageRootPath + "/data/public_key_exported/PrivateKeyRing" + (new Date()).getTime()
+					+ ".asc";
 			File fileToSave = new File(pathToSave);
+
 			try {
 				fileToSave.createNewFile();
 			} catch (IOException e1) {
@@ -242,19 +249,19 @@ public class KeyUtils {
 		}
 		return false;
 	}
-	
+
 	public IMPORT_OPERATION_RESULT importPrivateKeyRing(File file) {
-		try(InputStream inputStream = new ArmoredInputStream(new FileInputStream(file.toString()))){
-			PGPSecretKeyRing secretKeyRing = new PGPSecretKeyRing(inputStream,new JcaKeyFingerprintCalculator());
-			this.privateKeyRingCollection =  PGPSecretKeyRingCollection.addSecretKeyRing(privateKeyRingCollection, secretKeyRing);
+		try (InputStream inputStream = new ArmoredInputStream(new FileInputStream(file.toString()))) {
+			PGPSecretKeyRing secretKeyRing = new PGPSecretKeyRing(inputStream, new JcaKeyFingerprintCalculator());
+			this.privateKeyRingCollection = PGPSecretKeyRingCollection.addSecretKeyRing(privateKeyRingCollection,
+					secretKeyRing);
 			boolean ret = this.savePrivateKeyRing();
 			if (ret) {
 				return IMPORT_OPERATION_RESULT.SUCCESS;
 			}
-		} catch(IllegalArgumentException e) {	
+		} catch (IllegalArgumentException e) {
 			return IMPORT_OPERATION_RESULT.KEY_EXISTS;
-		}
-		  catch (FileNotFoundException e) {
+		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -264,7 +271,68 @@ public class KeyUtils {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		return IMPORT_OPERATION_RESULT.FAILURE;
 	}
+
+	// private key ring operations end
+
+	// public key rings operations start
+	public boolean deletePublicKeyRing(long privateKeyRingId, String passphrase) {
+
+		return false;
+	}
+
+	public IMPORT_OPERATION_RESULT importPublicKeyRing(File file) {
+		try (InputStream inputStream = new ArmoredInputStream(new FileInputStream(file.toString()))) {
+			PGPPublicKeyRing publicKeyRing = new PGPPublicKeyRing(inputStream, new JcaKeyFingerprintCalculator());
+			this.publicKeyRingCollection = PGPPublicKeyRingCollection.addPublicKeyRing(publicKeyRingCollection,
+					publicKeyRing);
+			boolean ret = this.savePublicKeyRing();
+			if (ret) {
+				return IMPORT_OPERATION_RESULT.SUCCESS;
+			}
+		} catch (IllegalArgumentException e) {
+			return IMPORT_OPERATION_RESULT.KEY_EXISTS;
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return IMPORT_OPERATION_RESULT.FAILURE;
+	}
+
+	public boolean exportPublicKeyRing(long keyId) {
+		PGPPublicKeyRing publicKeyRing;
+		try {
+			publicKeyRing = this.publicKeyRingCollection.getPublicKeyRing(keyId);
+			String pathToSave = packageRootPath + "/data/public_key_exported/PublicKeyRing" + (new Date()).getTime()
+					+ ".asc";
+			File fileToSave = new File(pathToSave);
+
+			try {
+				fileToSave.createNewFile();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+				return false;
+			}
+			try (OutputStream securedOutputStream = new ArmoredOutputStream(new FileOutputStream(fileToSave))) {
+				publicKeyRing.encode(securedOutputStream);
+				return true;
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
+		} catch (PGPException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		return false;
+	}
+
+	// public key rings operations end
+
 }
