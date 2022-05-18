@@ -2,7 +2,13 @@ package etf.openpgp.tl180410dra180333d.messages;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -11,11 +17,15 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import etf.openpgp.tl180410dra180333d.Application;
 
@@ -23,6 +33,10 @@ public class MessageSender {
 	private Application application;
 	private JComboBox<String> jcomboAutenticationKeys;
 	private JList<String> jlistEncryptionKeys;
+	
+	
+	private File selectedMessageFile = null;
+	private Path messageDestinationPath = null;
 
 	public MessageSender(Application application) {
 		this.application = application;
@@ -32,9 +46,11 @@ public class MessageSender {
 		sendMessagePanel.setLayout(new BorderLayout());
 
 		JPanel sendMessageFormPanel = new JPanel();
-		sendMessageFormPanel.setLayout(new GridLayout(7,2,5,5));
+		sendMessageFormPanel.setLayout(new GridLayout(9,2,5,5));
+		
 		// header 
 		JLabel jlHeader = new JLabel("Send message");
+		jlHeader.setFont(new Font("Courier", Font.BOLD, 20));
 		JPanel headerPanel = new JPanel();
 		headerPanel.add(jlHeader);
 		sendMessagePanel.add(headerPanel,BorderLayout.NORTH);
@@ -46,11 +62,45 @@ public class MessageSender {
 		sendMessageFormPanel.add(jlSourceFile);
 		sendMessageFormPanel.add(jbtnSourceFile);
 		
+		// selection source file selected
+		JLabel jlSourceFileSelected = new JLabel("No selected source file (required).");
+		sendMessageFormPanel.add(new JLabel("Message file name: ", SwingConstants.CENTER));
+		sendMessageFormPanel.add(jlSourceFileSelected);
+		
+		jbtnSourceFile.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser fileChooser = new JFileChooser(Application.dataRootPath);
+				fileChooser.setDialogTitle("Select message");
+				int result = fileChooser.showOpenDialog(application);
+				if (result == JFileChooser.APPROVE_OPTION) {
+					MessageSender.this.selectedMessageFile = fileChooser.getSelectedFile();
+					String selectedMessageFilePath = selectedMessageFile.getAbsolutePath();
+					jlSourceFileSelected.setText(selectedMessageFile.getName());
+				}
+			}
+		});
+		
+
+		
 		// selection destination
 		JLabel jlDestination = new JLabel("Choose destination");
 		JButton jbtnDestination = new JButton("Choose");
 		sendMessageFormPanel.add(jlDestination);
 		sendMessageFormPanel.add(jbtnDestination);
+		
+		// selected destination path
+		JLabel jlDestinationSelected = new JLabel("No selected destination (required).");
+		sendMessageFormPanel.add(new JLabel("Selected destination: ", SwingConstants.CENTER));
+		sendMessageFormPanel.add(jlDestinationSelected);
+		
+		jbtnDestination.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				MessageSender.this.messageDestinationPath = MessageSender.this.selectDestinationDialog();
+				jlDestinationSelected.setText(MessageSender.this.messageDestinationPath.toString());
+			}
+		});
 		
 		// autentication 
 		JLabel jlAutentication = new JLabel("Choose autentication key (Optional)");
@@ -79,12 +129,12 @@ public class MessageSender {
 		
 		// radix 64 optional
 		JLabel jlRadix64 = new JLabel("Do you want radix64 conversion?");
-		JCheckBox jcRadix64 = new JCheckBox();
+		JCheckBox jcRadix64 = new JCheckBox("(Optional)");
 		sendMessageFormPanel.add(jlRadix64);
 		sendMessageFormPanel.add(jcRadix64);
 		
 		JLabel jlZip = new JLabel("Do you want Zip compression?");
-		JCheckBox jcZip = new JCheckBox();
+		JCheckBox jcZip = new JCheckBox("(Optional)");
 		sendMessageFormPanel.add(jlZip);
 		sendMessageFormPanel.add(jcZip);
 		
@@ -92,13 +142,20 @@ public class MessageSender {
 		sendMessageFormPanel.setBorder(BorderFactory.createEmptyBorder(50, 150, 60, 150));
 
 		sendMessagePanel.add(sendMessageFormPanel,BorderLayout.CENTER);
-		JPanel jpButtonSend = new JPanel(new GridLayout(1,1));
-		JButton jbtnSend = new JButton("Send");
-		jbtnSend.setSize(sendMessagePanel.getWidth(),150);
-		jbtnSend.setBackground(new Color(0x80ffbf));
-		jpButtonSend.add(jbtnSend);
+		JPanel jpControlsSendMessageForm = new JPanel(new GridLayout(1,2));
 		
-		sendMessagePanel.add(jpButtonSend,BorderLayout.SOUTH);
+		JButton jbtnCancel = new JButton("Cancel");
+		jbtnCancel.setBackground(new Color(0xff6666));
+		jpControlsSendMessageForm.add(jbtnCancel);
+		
+		JButton jbtnSend = new JButton("Send");
+		jbtnSend.setBackground(new Color(0x80ffbf));
+		jpControlsSendMessageForm.add(jbtnSend);
+		
+		sendMessagePanel.add(jpControlsSendMessageForm,BorderLayout.SOUTH);
+		
+		
+		
 	}
 
 	public JComboBox<String> getJcomboAutenticationKeys() {
@@ -109,5 +166,17 @@ public class MessageSender {
 		return jlistEncryptionKeys;
 	}
 	
+	
+	private Path selectDestinationDialog() {
+		JFileChooser choose_where_to_export = new JFileChooser(Application.dataRootPath);
+		choose_where_to_export.setDialogTitle("Select message destination");
+		choose_where_to_export.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		int ret = choose_where_to_export.showDialog(this.application, "Save");
+		if (ret == JFileChooser.APPROVE_OPTION) {
+			Path path = Paths.get(choose_where_to_export.getSelectedFile().getAbsolutePath());
+			return path;
+		}
+		return null;
+	}
 	
 }
