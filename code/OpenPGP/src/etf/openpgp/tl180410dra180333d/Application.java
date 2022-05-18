@@ -40,6 +40,8 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 
 import etf.openpgp.tl180410dra180333d.keys.KeyUtils;
+import etf.openpgp.tl180410dra180333d.keys.OperationResult;
+import etf.openpgp.tl180410dra180333d.keys.OperationResult.IMPORT_OPERATION_RESULT;
 
 /**
  * 
@@ -62,16 +64,16 @@ public class Application extends JFrame {
 		this.setSize(1080, 720);
 
 		this.initialization();
-		
+
 		this.keyUtils = new KeyUtils(this);
 		this.setVisible(true);
-		
+
 		// when user close program on X
-	    this.addWindowListener(new WindowAdapter() {
-	        public void windowClosing(WindowEvent e) {
-	            dispose();
-	        }
-	    });
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				dispose();
+			}
+		});
 	}
 
 	/**
@@ -110,19 +112,19 @@ public class Application extends JFrame {
 		privateKeyRingPanel.add(jpAddNewPrivateRingKeyForm, BorderLayout.NORTH);
 
 		JPanel jpControls = new JPanel();
-		
-		//begin
-		//panel for showing import button, export button, delete button
-		
+
+		// begin
+		// panel for showing import button, export button, delete button
+
 		jpControls.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.weightx = 1;
 		c.weighty = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		
+
 		c.gridy = 0;
 		c.gridx = 0;
-		c.gridwidth=2;
+		c.gridwidth = 2;
 		int top = 5;
 		int left = 10;
 		int bottom = 5;
@@ -131,32 +133,32 @@ public class Application extends JFrame {
 		JButton deletePrivateKeyRingButton = new JButton("DELETE SELECTED KEY FROM PRIVATE KEY RING");
 		jpControls.add(deletePrivateKeyRingButton, c);
 
-		c.gridwidth=1;
-		c.gridy=1;
+		c.gridwidth = 1;
+		c.gridy = 1;
 		JButton exportPrivateKeyRingButton = new JButton("EXPORT SELECTED KEY FROM PRIVATE KEY RING");
 		jpControls.add(exportPrivateKeyRingButton, c);
-		
-		c.gridx=1;
+
+		c.gridx = 1;
 		JButton importPrivateKeyRingButton = new JButton("IMPORT KEY TO PRIVATE KEY RING");
 		jpControls.add(importPrivateKeyRingButton, c);
-		
-		//panel for showing import button, export button, delete button
-		//end
-		
+
+		// panel for showing import button, export button, delete button
+		// end
+
 		privateKeyRingPanel.add(jpControls, BorderLayout.SOUTH);
 
 		String[] columnLabels = { "Timestamp", "User ID", "Sign Key ID" };
 		this.privateKeyRingTableModel = this.initialize_keyRingTable(privateKeyRingPanel, columnLabels,
-				deletePrivateKeyRingButton, exportPrivateKeyRingButton,importPrivateKeyRingButton);
+				deletePrivateKeyRingButton, exportPrivateKeyRingButton, importPrivateKeyRingButton);
 	}
 
 	private void initialize_publicKeyRingPanel(JPanel publicKeyRingPanel) {
 
 		publicKeyRingPanel.setLayout(new BorderLayout());
 
-		//begin
-		//panel for showing import button, export button, delete button
-		
+		// begin
+		// panel for showing import button, export button, delete button
+
 		JPanel jpControls = new JPanel();
 		jpControls.setLayout(new GridBagLayout());
 
@@ -164,10 +166,10 @@ public class Application extends JFrame {
 		c.weightx = 1;
 		c.weighty = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		
+
 		c.gridy = 0;
 		c.gridx = 0;
-		c.gridwidth=2;
+		c.gridwidth = 2;
 		int top = 5;
 		int left = 10;
 		int bottom = 5;
@@ -176,29 +178,28 @@ public class Application extends JFrame {
 		JButton deletePublicKeyRingButton = new JButton("DELETE SELECTED KEY FROM PUBLIC KEY RING");
 		jpControls.add(deletePublicKeyRingButton, c);
 
-		c.gridwidth=1;
-		c.gridy=1;
-		
+		c.gridwidth = 1;
+		c.gridy = 1;
+
 		JButton exportPublicKeyRingButton = new JButton("EXPORT SELECTED KEY FROM PUBLIC KEY RING");
 		jpControls.add(exportPublicKeyRingButton, c);
-		
-		c.gridx=1;
+
+		c.gridx = 1;
 		JButton importPublicKeyRingButton = new JButton("IMPORT KEY TO PUBLIC RING");
 		jpControls.add(importPublicKeyRingButton, c);
 
-		
-		//end panel
-		
+		// end panel
+
 		publicKeyRingPanel.add(jpControls, BorderLayout.SOUTH);
 
 		String[] columnLabels = { "Timestamp", "User ID", "Key ID" };
 		this.publicKeyRingTableModel = this.initialize_keyRingTable(publicKeyRingPanel, columnLabels,
-				deletePublicKeyRingButton, exportPublicKeyRingButton,importPublicKeyRingButton);
+				deletePublicKeyRingButton, exportPublicKeyRingButton, importPublicKeyRingButton);
 
 	}
 
 	private DefaultTableModel initialize_keyRingTable(JPanel keyRingPanel, String[] columnLabels,
-			JButton deleteKeyRingButton, JButton exportKeyRingButton,JButton importKeyRingButton) {
+			JButton deleteKeyRingButton, JButton exportKeyRingButton, JButton importKeyRingButton) {
 
 		JTable jtKeyRingTable = new JTable();
 		jtKeyRingTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
@@ -248,7 +249,7 @@ public class Application extends JFrame {
 		});
 
 		importKeyRingButton.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				importPrivateKeyRing();
@@ -391,6 +392,7 @@ public class Application extends JFrame {
 			PGPSecretKeyRing privateKeyRing = privateKeyRingIterator.next();
 
 			Iterator<PGPSecretKey> privateKeyIterator = privateKeyRing.getSecretKeys();
+			
 
 			// we are sure that we have two keys in ring, one for sign and one for
 			// encryption
@@ -420,7 +422,7 @@ public class Application extends JFrame {
 		}
 
 	}
-	
+
 	public void update_publicKeyRingTableModel(PGPPublicKeyRingCollection publicKeyRingCollection) {
 		this.publicKeyRingTableModel.setRowCount(0); // clear table model
 
@@ -459,7 +461,6 @@ public class Application extends JFrame {
 		}
 
 	}
-	
 
 	private void deletePrivateKeyRing(long keyId) {
 		String passphrase = JOptionPane.showInputDialog(new JFrame(),
@@ -494,40 +495,42 @@ public class Application extends JFrame {
 	private void importPrivateKeyRing() {
 		JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
 		fileChooser.setDialogTitle("Import file");
-		fileChooser.setFileFilter(new FileNameExtensionFilter(
-                "Asc files", "asc"));
-        int result = fileChooser.showOpenDialog(this);
-        if (result == fileChooser.APPROVE_OPTION) {
-        	File selectedFile = fileChooser.getSelectedFile();
+		fileChooser.setFileFilter(new FileNameExtensionFilter("Asc files", "asc"));
+		int result = fileChooser.showOpenDialog(this);
+		if (result == fileChooser.APPROVE_OPTION) {
+			File selectedFile = fileChooser.getSelectedFile();
 
-        	// check extension of file
-        	
-	        String fileName = selectedFile.toString();
-	        int index = fileName.lastIndexOf('.');
-	        if(index > 0) {
-	          String extension = fileName.substring(index + 1);
-	          if (extension.equals("asc")) {
-	        	  boolean ret = keyUtils.importPrivateKeyRing(selectedFile);
-	        	  if (ret == true) {
-	        		  JOptionPane.showMessageDialog(new JFrame(), "Importing file is successful!", "Success",
-	  	  					JOptionPane.INFORMATION_MESSAGE);
-	        		  return;
-	        	  }
-	          }
-	          else {
-	        	  JOptionPane.showMessageDialog(new JFrame(), "File extension must be asc!", "Extension error",
-	  					JOptionPane.ERROR_MESSAGE);
-	        	  return;
-	          }
-	        }
-        }
-        else {
-        	JOptionPane.showMessageDialog(new JFrame(), "Importing key is not successful!", "Import error",
+			// check extension of file
+
+			String fileName = selectedFile.toString();
+			int index = fileName.lastIndexOf('.');
+			if (index > 0) {
+				String extension = fileName.substring(index + 1);
+				if (extension.equals("asc")) {
+					OperationResult.IMPORT_OPERATION_RESULT ret = keyUtils.importPrivateKeyRing(selectedFile);
+					if (ret == IMPORT_OPERATION_RESULT.SUCCESS) {
+						JOptionPane.showMessageDialog(new JFrame(), "Importing file is successful!", "Success",
+								JOptionPane.INFORMATION_MESSAGE);
+						return;
+					} else if (ret == IMPORT_OPERATION_RESULT.KEY_EXISTS) {
+						
+						JOptionPane.showMessageDialog(new JFrame(), "Key Ring already exists in table!", "Duplicate error",
+								JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+				} else {
+					JOptionPane.showMessageDialog(new JFrame(), "File extension must be asc!", "Extension error",
+							JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+			}
+		} else if (result != fileChooser.CANCEL_OPTION) {
+			JOptionPane.showMessageDialog(new JFrame(), "Importing key is not successful!", "Import error",
 					JOptionPane.ERROR_MESSAGE);
-        }
-				
-		
+		}
+
 	}
+
 	public static void main(String[] args) {
 		Application app = new Application();
 	}

@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -32,6 +33,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 
 import etf.openpgp.tl180410dra180333d.Application;
+import etf.openpgp.tl180410dra180333d.keys.OperationResult.IMPORT_OPERATION_RESULT;
 
 public class KeyUtils {
 	private static final String packageRootPath = "./src/etf/openpgp/tl180410dra180333d/";	
@@ -44,7 +46,7 @@ public class KeyUtils {
 	private PGPPublicKeyRingCollection publicKeyRingCollection;
 
 	private Application application = null;
-
+	
 	public KeyUtils(Application application) {
 		try {
 			this.publicKeyRingCollection = new PGPPublicKeyRingCollection(new LinkedList<>());
@@ -218,11 +220,17 @@ public class KeyUtils {
 		PGPSecretKeyRing secretKeyRing;
 		try {
 			secretKeyRing = this.privateKeyRingCollection.getSecretKeyRing(keyId);
-			PGPSecretKey secretKey = secretKeyRing.getSecretKey();
 			String pathToSave = packageRootPath + "/data/exportedPrivateKeyRing" + (new Date()).getTime() + ".asc";
 			File fileToSave = new File(pathToSave);
-			try (OutputStream securedOutputStream = new ArmoredOutputStream(new FileOutputStream(fileToSave, false))) {
-				secretKey.encode(securedOutputStream);
+			try {
+				fileToSave.createNewFile();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+				return false;
+			}
+			try (OutputStream securedOutputStream = new ArmoredOutputStream(new FileOutputStream(fileToSave))) {
+				secretKeyRing.encode(securedOutputStream);
 				return true;
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -235,9 +243,28 @@ public class KeyUtils {
 		return false;
 	}
 	
-	public boolean importPrivateKeyRing(File file) {
+	public IMPORT_OPERATION_RESULT importPrivateKeyRing(File file) {
+		try(InputStream inputStream = new ArmoredInputStream(new FileInputStream(file.toString()))){
+			PGPSecretKeyRing secretKeyRing = new PGPSecretKeyRing(inputStream,new JcaKeyFingerprintCalculator());
+			this.privateKeyRingCollection =  PGPSecretKeyRingCollection.addSecretKeyRing(privateKeyRingCollection, secretKeyRing);
+			boolean ret = this.savePrivateKeyRing();
+			if (ret) {
+				return IMPORT_OPERATION_RESULT.SUCCESS;
+			}
+		} catch(IllegalArgumentException e) {	
+			return IMPORT_OPERATION_RESULT.KEY_EXISTS;
+		}
+		  catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (PGPException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
-		
-		return false;
+		return IMPORT_OPERATION_RESULT.FAILURE;
 	}
 }
