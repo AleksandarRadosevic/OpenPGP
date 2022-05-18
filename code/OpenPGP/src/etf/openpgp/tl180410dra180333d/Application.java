@@ -576,7 +576,7 @@ public class Application extends JFrame {
 	}
 
 	private String exportDialog(KEY_RING_TYPE ringType) {
-		JFileChooser choose_where_to_export = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+		JFileChooser choose_where_to_export = new JFileChooser("./src/etf/openpgp/tl180410dra180333d/data");
 		choose_where_to_export.setDialogTitle("Export key from "
 				+ ((ringType == KEY_RING_TYPE.PRIVATE_KEY_RING) ? "private" : "public") + " key ring collection");
 		choose_where_to_export.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
