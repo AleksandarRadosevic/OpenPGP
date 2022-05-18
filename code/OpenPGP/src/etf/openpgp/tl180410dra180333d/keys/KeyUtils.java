@@ -76,13 +76,19 @@ public class KeyUtils {
 		} catch (PGPException e) {
 			e.printStackTrace();
 		}
-		/*
-		 * try { this.publicKeyRingCollection = new PGPPublicKeyRingCollection(new
-		 * ArmoredInputStream(new FileInputStream(this.publicKeyRingCollectionFile)),
-		 * new JcaKeyFingerprintCalculator()); } catch (FileNotFoundException e) {
-		 * e.printStackTrace(); } catch (IOException e) { e.printStackTrace(); } catch
-		 * (PGPException e) { e.printStackTrace(); }
-		 */
+
+		try {
+			this.publicKeyRingCollection = new PGPPublicKeyRingCollection(
+					new ArmoredInputStream(new FileInputStream(this.publicKeyRingCollectionFile)),
+					new JcaKeyFingerprintCalculator());
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (PGPException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public boolean generatePrivateRingKey(String userId, String signAlgorithm, String encryptionAlgorithm,
@@ -225,7 +231,7 @@ public class KeyUtils {
 		PGPSecretKeyRing secretKeyRing;
 		try {
 			secretKeyRing = this.privateKeyRingCollection.getSecretKeyRing(keyId);
-			String pathToSave = packageRootPath + "/data/public_key_exported/PrivateKeyRing" + (new Date()).getTime()
+			String pathToSave = packageRootPath + "/data/private_key_exported/PrivateKeyRing" + (new Date()).getTime()
 					+ ".asc";
 			File fileToSave = new File(pathToSave);
 
@@ -278,9 +284,28 @@ public class KeyUtils {
 	// private key ring operations end
 
 	// public key rings operations start
-	public boolean deletePublicKeyRing(long privateKeyRingId, String passphrase) {
+	public boolean deletePublicKeyRing(long publicKeyRingId) {
+		try {
+			PGPPublicKeyRing publicKeyRing = this.publicKeyRingCollection.getPublicKeyRing(publicKeyRingId);
+			Iterator<PGPPublicKey> publicKeyIterator = publicKeyRing.getPublicKeys();
 
-		return false;
+			// we are sure that we have dsa and elgamal keys in privateKeyRing
+			PGPPublicKey signKey = publicKeyIterator.next();
+
+			// check passphrase
+			
+			this.publicKeyRingCollection = PGPPublicKeyRingCollection
+					.removePublicKeyRing(this.publicKeyRingCollection, publicKeyRing);
+			this.savePublicKeyRing();
+		} catch (PGPException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			JOptionPane.showMessageDialog(new JFrame(), "Incorrect passphrase for private key or key is missing!",
+					"Error - incorrect passphrase or key is missing", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+		return true;
+		
 	}
 
 	public IMPORT_OPERATION_RESULT importPublicKeyRing(File file) {
