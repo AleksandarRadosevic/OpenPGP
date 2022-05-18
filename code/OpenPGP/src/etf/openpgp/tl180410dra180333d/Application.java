@@ -18,6 +18,8 @@ import java.security.Security;
 import java.util.Date;
 import java.util.Iterator;
 
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -42,6 +44,8 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import etf.openpgp.tl180410dra180333d.keys.KeyUtils;
 import etf.openpgp.tl180410dra180333d.keys.OperationResult;
 import etf.openpgp.tl180410dra180333d.keys.OperationResult.IMPORT_OPERATION_RESULT;
+import etf.openpgp.tl180410dra180333d.messages.MessageReceiver;
+import etf.openpgp.tl180410dra180333d.messages.MessageSender;
 
 /**
  * 
@@ -53,13 +57,19 @@ public class Application extends JFrame {
 	public static final String packageRootPath = "./src/etf/openpgp/tl180410dra180333d/";
 	public static final String dataRootPath = Application.packageRootPath + "/data";
 
-	private static final String[] asymmetricEncryptionAlgorithms = { "ElGamal 1024", "ElGamal 2048", "ElGamal 4096" };
-	private static final String[] asymmetricSignAlgorithms = { "DSA 1024", "DSA 2048" };
+	public static final String[] asymmetricEncryptionAlgorithms = { "ElGamal 1024", "ElGamal 2048", "ElGamal 4096" };
+	public static final String[] asymmetricSignAlgorithms = { "DSA 1024", "DSA 2048" };
+	public static final String[] symmetricAlgorithms = { "3DES", "AES 128" };
 
+	
+	
 	private DefaultTableModel privateKeyRingTableModel = null;
 	private DefaultTableModel publicKeyRingTableModel = null;
 	private KeyUtils keyUtils = null;
-
+	private MessageSender messageSender = null;
+	private MessageReceiver messageReceiver = null;
+	
+	
 	private static enum INITIALIZE_TABLE {
 		PRIVATE_RING_TABLE, PUBLIC_RING_TABLE
 	}
@@ -74,9 +84,13 @@ public class Application extends JFrame {
 		this.setTitle("OpenPGP App");
 		this.setSize(1080, 720);
 
+		this.messageSender = new MessageSender(this);
+		this.messageReceiver = new MessageReceiver(null);
+		
 		this.initialization();
 
 		this.keyUtils = new KeyUtils(this);
+		
 		this.setVisible(true);
 
 		// when user close program on X
@@ -293,11 +307,11 @@ public class Application extends JFrame {
 	}
 
 	private void initialize_sendMessagePanel(JPanel sendMessagePanel) {
-
+		this.messageSender.initializeApplicationPanel(sendMessagePanel);
 	}
 
 	private void initialize_receiveMessagePanel(JPanel receiveMessagePanel) {
-
+		this.messageReceiver.initializeApplicationPanel(receiveMessagePanel);
 	}
 
 	private JPanel create_addNewPrivateRingKeyForm() {
@@ -419,7 +433,9 @@ public class Application extends JFrame {
 
 	public void update_privateKeyRingTableModel(PGPSecretKeyRingCollection privateKeyRingCollection) {
 		this.privateKeyRingTableModel.setRowCount(0); // clear table model
-
+		
+		DefaultComboBoxModel<String> authenticationKeyListModel = new DefaultComboBoxModel<>();
+		
 		Iterator<PGPSecretKeyRing> privateKeyRingIterator = privateKeyRingCollection.getKeyRings();
 
 		while (privateKeyRingIterator.hasNext()) {
@@ -452,13 +468,16 @@ public class Application extends JFrame {
 					String.format("%016x", singnKeyId).toUpperCase() };
 
 			this.privateKeyRingTableModel.addRow(privateKeyRingTableRow);
+			authenticationKeyListModel.addElement(keyOwner+" "+String.format("%016x", singnKeyId).toUpperCase());
 		}
-
+		this.messageSender.getJcomboAutenticationKeys().setModel(authenticationKeyListModel);
 	}
 
 	public void update_publicKeyRingTableModel(PGPPublicKeyRingCollection publicKeyRingCollection) {
 		this.publicKeyRingTableModel.setRowCount(0); // clear table model
 
+		DefaultListModel<String>encryptionKeyListModel = new DefaultListModel<>();
+		
 		Iterator<PGPPublicKeyRing> publicKeyRingIterator = publicKeyRingCollection.getKeyRings();
 
 		while (publicKeyRingIterator.hasNext()) {
@@ -491,8 +510,10 @@ public class Application extends JFrame {
 					String.format("%016x", singnKeyId).toUpperCase() };
 
 			this.publicKeyRingTableModel.addRow(publicKeyRingTableRow);
+			encryptionKeyListModel.addElement(keyOwner+" "+String.format("%016x", singnKeyId).toUpperCase());
 		}
-
+		this.messageSender.getJlistEncryptionKeys().setModel(encryptionKeyListModel);
+		
 	}
 
 	// key ring operations
