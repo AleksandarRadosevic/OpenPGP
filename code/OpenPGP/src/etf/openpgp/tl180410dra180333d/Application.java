@@ -13,6 +13,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.math.BigInteger;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.Security;
 import java.util.Date;
 import java.util.Iterator;
@@ -255,13 +257,19 @@ public class Application extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				// check for selected row first
 				if (jtKeyRingTable.getSelectedRow() != -1) {
+					String selectedExportPath = exportDialog();
+					if(selectedExportPath == null) {
+						
+						System.out.println("odustao");
+						return;
+					}
 
 					String keyIdStr = (String) keyRingTableModel.getValueAt(jtKeyRingTable.getSelectedRow(), 2);
 					long keyId = new BigInteger(keyIdStr, 16).longValue();
 					if (table_to_initialize == INITIALIZE_TABLE.PRIVATE_RING_TABLE) {
-						exportKeyRing(keyId, KEY_RING_TYPE.PRIVATE_KEY_RING);
+						exportKeyRing(keyId, KEY_RING_TYPE.PRIVATE_KEY_RING, selectedExportPath);
 					} else {
-						exportKeyRing(keyId, KEY_RING_TYPE.PUBLIC_KEY_RING);
+						exportKeyRing(keyId, KEY_RING_TYPE.PUBLIC_KEY_RING, selectedExportPath);
 					}
 				}
 			}
@@ -514,12 +522,12 @@ public class Application extends JFrame {
 		}
 	}
 
-	private void exportKeyRing(long keyId, KEY_RING_TYPE expecting_ring) {
+	private void exportKeyRing(long keyId, KEY_RING_TYPE expecting_ring, String selectedExportPath) {
 		boolean ret;
 		if (expecting_ring == KEY_RING_TYPE.PRIVATE_KEY_RING) {
-			ret = keyUtils.exportPrivateKeyRing(keyId);
+			ret = keyUtils.exportPrivateKeyRing(keyId, selectedExportPath);
 		} else {
-			ret = keyUtils.exportPublicKeyRing(keyId);
+			ret = keyUtils.exportPublicKeyRing(keyId, selectedExportPath);
 		}
 		if (!ret) {
 			JOptionPane.showMessageDialog(new JFrame(), "Exporting key is not successful!", "Export error",
@@ -573,6 +581,18 @@ public class Application extends JFrame {
 
 	}
 	
+	
+	private String exportDialog() {
+		JFileChooser choose_where_to_export = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+		choose_where_to_export.setDialogTitle("Export key from "+""+" ring collection");
+		choose_where_to_export.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		int ret=choose_where_to_export.showDialog(new JFrame(),"Save");
+		if(ret==JFileChooser.APPROVE_OPTION) {
+			Path path = Paths.get(choose_where_to_export.getSelectedFile().getAbsolutePath());
+			return path.toString();		
+		}
+		return null;
+	}
 
 
 	public static void main(String[] args) {

@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -21,6 +23,7 @@ import javax.swing.JOptionPane;
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
+import org.bouncycastle.jce.spec.ElGamalParameterSpec;
 import org.bouncycastle.openpgp.*;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
@@ -97,36 +100,16 @@ public class KeyUtils {
 		PGPSecretKeyRing privateKeyRing = null;
 
 		// DSA Key generation for sign
-		PGPKeyPair dsaKeyPair = null;
-
-		try {
-			KeyPairGenerator dsaKeyPairGenerator = KeyPairGenerator.getInstance("DSA", "BC");
-			int dsaKeySize = Integer.parseInt(signAlgorithm.split(" ")[1]);
-
-			dsaKeyPairGenerator.initialize(dsaKeySize);
-			KeyPair keyPair = dsaKeyPairGenerator.generateKeyPair();
-			dsaKeyPair = new JcaPGPKeyPair(PGPPublicKey.DSA, keyPair, new Date());
-
-		} catch (NoSuchAlgorithmException | PGPException | NoSuchProviderException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		int dsaKeySize = Integer.parseInt(signAlgorithm.split(" ")[1]);
+		PGPKeyPair dsaKeyPair = this.generateDSAKeyPair(dsaKeySize);
+		if(dsaKeyPair == null) {
 			return false;
 		}
 
 		// El Gamal Key generation for encryption
-		PGPKeyPair elGamalKeyPair = null;
-
-		try {
-			KeyPairGenerator elGamalKeyPairGenerator = KeyPairGenerator.getInstance("ElGamal", "BC");
-			int elGamalKeySize = Integer.parseInt(encryptionAlgorithm.split(" ")[1]);
-
-			elGamalKeyPairGenerator.initialize(elGamalKeySize);
-			KeyPair keyPair = elGamalKeyPairGenerator.generateKeyPair();
-			elGamalKeyPair = new JcaPGPKeyPair(PGPPublicKey.ELGAMAL_ENCRYPT, keyPair, new Date());
-
-		} catch (NoSuchAlgorithmException | NoSuchProviderException | PGPException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		int elGamalKeySize = Integer.parseInt(encryptionAlgorithm.split(" ")[1]);
+		PGPKeyPair elGamalKeyPair = this.generateElGamalKeyPair(elGamalKeySize);
+		if(elGamalKeyPair == null) {
 			return false;
 		}
 
@@ -162,6 +145,42 @@ public class KeyUtils {
 		}
 
 		return false;
+	}
+	
+	private PGPKeyPair generateDSAKeyPair(int keySize) {
+		PGPKeyPair dsaKeyPair = null;
+		try {
+			KeyPairGenerator dsaKeyPairGenerator = KeyPairGenerator.getInstance("DSA", "BC");
+			dsaKeyPairGenerator.initialize(keySize);
+			
+			KeyPair keyPair = dsaKeyPairGenerator.generateKeyPair();
+			dsaKeyPair = new JcaPGPKeyPair(PGPPublicKey.DSA, keyPair, new Date());
+
+		} catch (NoSuchAlgorithmException | PGPException | NoSuchProviderException e) {
+			e.printStackTrace();
+		}
+		return dsaKeyPair;
+	}
+	
+	private PGPKeyPair generateElGamalKeyPair(int keySize) {
+		PGPKeyPair elGamalKeyPair = null;
+		try {
+			KeyPairGenerator elGamalKeyPairGenerator = KeyPairGenerator.getInstance("ElGamal", "BC");
+			if(keySize <= 2048) {
+				elGamalKeyPairGenerator.initialize(keySize);
+			}
+			else {
+				BigInteger primeModulous = this.getPrime4096();
+				BigInteger baseGenerator = this.getBaseGenerator();
+				ElGamalParameterSpec paramSpecs = new ElGamalParameterSpec(primeModulous, baseGenerator);
+				elGamalKeyPairGenerator.initialize(paramSpecs);
+			}
+			KeyPair keyPair = elGamalKeyPairGenerator.generateKeyPair();
+			elGamalKeyPair = new JcaPGPKeyPair(PGPPublicKey.ELGAMAL_ENCRYPT, keyPair, new Date());
+		} catch (NoSuchAlgorithmException | NoSuchProviderException | PGPException | InvalidAlgorithmParameterException e) {
+			e.printStackTrace();
+		}
+		return elGamalKeyPair;
 	}
 
 	private boolean savePrivateKeyRing() {
@@ -227,12 +246,18 @@ public class KeyUtils {
 		return true;
 	}
 
-	public boolean exportPrivateKeyRing(long keyId) {
+	public boolean exportPrivateKeyRing(long keyId, String selectedExportPath) {
 		PGPSecretKeyRing secretKeyRing;
 		try {
 			secretKeyRing = this.privateKeyRingCollection.getSecretKeyRing(keyId);
-			String pathToSave = packageRootPath + "/data/private_key_exported/PrivateKeyRing" + (new Date()).getTime()
-					+ ".asc";
+			String pathToSave = null;
+			if(selectedExportPath!=null && selectedExportPath.length()>0) {
+				pathToSave = selectedExportPath + "\\PrivateKeyRing";
+			}
+			else {
+				pathToSave = packageRootPath + "/data/private_key_exported/PrivateKeyRing";
+			}
+			pathToSave = pathToSave + (new Date()).getTime()+ ".asc";
 			File fileToSave = new File(pathToSave);
 
 			try {
@@ -329,12 +354,19 @@ public class KeyUtils {
 		return IMPORT_OPERATION_RESULT.FAILURE;
 	}
 
-	public boolean exportPublicKeyRing(long keyId) {
+	public boolean exportPublicKeyRing(long keyId, String selectedExportPath) {
 		PGPPublicKeyRing publicKeyRing;
 		try {
 			publicKeyRing = this.publicKeyRingCollection.getPublicKeyRing(keyId);
-			String pathToSave = packageRootPath + "/data/public_key_exported/PublicKeyRing" + (new Date()).getTime()
-					+ ".asc";
+			
+			String pathToSave = null;
+			if(selectedExportPath!=null && selectedExportPath.length()>0) {
+				pathToSave = selectedExportPath + "\\data\\public_key_exported\\PublicKeyRing";
+			}
+			else {
+				pathToSave = packageRootPath + "/data/public_key_exported/PublicKeyRing";
+			}
+			pathToSave = pathToSave + (new Date()).getTime()+ ".asc";
 			File fileToSave = new File(pathToSave);
 
 			try {
@@ -359,5 +391,45 @@ public class KeyUtils {
 	}
 
 	// public key rings operations end
+	
+    /**
+     * Based on rfc3526
+     * 
+     * This is a 4096 bit MODP Group 
+     * Prime number is: 2^4096 - 2^4032 - 1 + 2^64 * { [2^3996 pi] + 240904 }
+     * 
+     * @return a 4096 bit MODP group safe prime modulus
+     */
+    private static final BigInteger getPrime4096() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD1");
+            sb.append("29024E088A67CC74020BBEA63B139B22514A08798E3404DD");
+            sb.append("EF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245");
+            sb.append("E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7ED");
+            sb.append("EE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3D");
+            sb.append("C2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F");
+            sb.append("83655D23DCA3AD961C62F356208552BB9ED529077096966D");
+            sb.append("670C354E4ABC9804F1746C08CA18217C32905E462E36CE3B");
+            sb.append("E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9");
+            sb.append("DE2BCBF6955817183995497CEA956AE515D2261898FA0510");
+            sb.append("15728E5A8AAAC42DAD33170D04507A33A85521ABDF1CBA64");
+            sb.append("ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7");
+            sb.append("ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6B");
+            sb.append("F12FFA06D98A0864D87602733EC86A64521F2B18177B200C");
+            sb.append("BBE117577A615D6C770988C0BAD946E208E24FA074E5AB31");
+            sb.append("43DB5BFCE0FD108E4B82D120A92108011A723C12A787E6D7");
+            sb.append("88719A10BDBA5B2699C327186AF4E23C1A946834B6150BDA");
+            sb.append("2583E9CA2AD44CE8DBBBC2DB04DE8EF92E8EFC141FBECAA6");
+            sb.append("287C59474E6BC05D99B2964FA090C3A2233BA186515BE7ED");
+            sb.append("1F612970CEE2D7AFB81BDD762170481CD0069127D5B05AA9");
+            sb.append("93B4EA988D8FDDC186FFB7DC90A6C08F4DF435C934063199");
+            sb.append("FFFFFFFFFFFFFFFF");
+            return new BigInteger(sb.toString(), 16);
+    }
+    
+    private static final BigInteger getBaseGenerator() {
+        return new BigInteger("2", 16);
+    }
+
 
 }
