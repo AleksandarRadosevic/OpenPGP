@@ -85,9 +85,10 @@ public class MessageSender {
 				fileChooser.setDialogTitle("Select message");
 				int result = fileChooser.showOpenDialog(application);
 				if (result == JFileChooser.APPROVE_OPTION) {
+					File selectedFile = fileChooser.getSelectedFile();
 					messageSenderForm.setSourceFile(fileChooser.getSelectedFile());
-					String selectedMessageFilePath = messageSenderForm.getSourceFile().getAbsolutePath();
-					jlSourceFileSelected.setText(messageSenderForm.getSourceFile().getName());
+					String selectedMessageFilePath = selectedFile.getAbsolutePath();
+					jlSourceFileSelected.setText(selectedFile.getName());
 				}
 			}
 		});

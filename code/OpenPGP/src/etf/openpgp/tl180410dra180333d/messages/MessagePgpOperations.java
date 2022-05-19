@@ -28,8 +28,6 @@ import etf.openpgp.tl180410dra180333d.keys.KeyUtils;
 
 /**
  * Klasa koja obezbedjuje operacije prilikom slanja i prijema poruke koristeci PGP protokol
- * @author Luka
- *
  */
 public class MessagePgpOperations {
 
