@@ -111,27 +111,44 @@ public class MessageSender {
 		sendMessageFormPanel.add(jlAutentication);
 		sendMessageFormPanel.add(jcomboAutenticationKeys);
 				
-		// keys for encryption
-		JLabel jlEncryptionKeys = new JLabel("Choose encryption keys (Optional)");
+		
+		// keys for session key encryption
+		JLabel jlEncryptionKeys = new JLabel("Choose encryption keys (required if encryption algorithm is selected)");
 		jlistEncryptionKeys = new JList<>();
 		jlistEncryptionKeys.setVisibleRowCount(5);
+		jlistEncryptionKeys.setEnabled(false);
 		
 		JScrollPane jscEncryptionKeys = new JScrollPane(jlistEncryptionKeys);
+		// added to panel after symmetric algorithm selection
 		
-		
-		sendMessageFormPanel.add(jlEncryptionKeys);
-		sendMessageFormPanel.add(jscEncryptionKeys);
-		
-				
 		// choose symmetric algorithm
-		JLabel jlAlgorithm = new JLabel("Choose symmetric key algorithm (Optional)");
+		JLabel jlAlgorithm = new JLabel("Choose symmetric key algorithm for encryption (Optional)");
 		String [] symmetricAlgorithms = new String[Application.symmetricAlgorithms.length+1];
 		System.arraycopy(new String[] {null}, 0, symmetricAlgorithms, 0, 1);
 	    System.arraycopy(Application.symmetricAlgorithms, 0, symmetricAlgorithms, 1, Application.symmetricAlgorithms.length);
 		JComboBox<String>jcomboAlgorithm = new JComboBox<>(symmetricAlgorithms);
 		
+		
+		jcomboAlgorithm.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String selectedSymmetricAlgorithm = (String) jcomboAlgorithm.getSelectedItem();
+				if(selectedSymmetricAlgorithm==null) {
+					jlistEncryptionKeys.clearSelection();
+					jlistEncryptionKeys.setEnabled(false);
+				}
+				else {
+					jlistEncryptionKeys.setEnabled(true);
+				}
+			}
+		});
+
 		sendMessageFormPanel.add(jlAlgorithm);
 		sendMessageFormPanel.add(jcomboAlgorithm);
+		
+		sendMessageFormPanel.add(jlEncryptionKeys);
+		sendMessageFormPanel.add(jscEncryptionKeys);
 		
 		// radix 64 optional
 		JLabel jlRadix64 = new JLabel("Do you want radix64 conversion?");
@@ -145,7 +162,7 @@ public class MessageSender {
 		sendMessageFormPanel.add(jcZip);
 		
 		
-		sendMessageFormPanel.setBorder(BorderFactory.createEmptyBorder(50, 150, 60, 150));
+		sendMessageFormPanel.setBorder(BorderFactory.createEmptyBorder(50, 130, 60, 130));
 
 		sendMessagePanel.add(sendMessageFormPanel,BorderLayout.CENTER);
 		JPanel jpControlsSendMessageForm = new JPanel(new GridLayout(1,2));

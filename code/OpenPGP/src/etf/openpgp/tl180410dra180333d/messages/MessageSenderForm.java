@@ -6,12 +6,14 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JOptionPane;
 
+import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -142,6 +144,9 @@ public class MessageSenderForm {
 			return "Source file is missing!";
 		if (this.destinationPath == null)
 			return "Destination path is missing!";
+		if((this.symmetricKeyAlgorithm!=null)&&this.encryptionKeys.size()==0) {
+			return "Public key for session key encryption must be selected!";
+		}
 		if (this.signKey != null) {
 			// check passphrase
 			this.passphrase = JOptionPane.showInputDialog(this.application,
@@ -177,26 +182,49 @@ public class MessageSenderForm {
 		} catch (Exception e) {
 			return "Source file can not be read!";
 		}
+		int iterationCount = 1;
+		if (this.encryptionKeys != null && this.encryptionKeys.size() > 0) {
+			iterationCount = this.encryptionKeys.size();
+		}
 
-		try(FileOutputStream fileOutputStream = new FileOutputStream(this.destinationPath+"\\"+sourceFile.getName()+".gpg")) {
-			// message should be authenticated - signed if signKey is selected
-			if (this.signKey != null) {
-				message = MessagePgpOperations.sign(message, this.signKey, this.passphrase);
+		for (int iteration = 0; iteration < iterationCount; iteration++) {
+
+			PGPPublicKey iterationPublicKeyForSessionKeyEncryption = null;
+			if (this.encryptionKeys.size() > iteration) {
+				iterationPublicKeyForSessionKeyEncryption = this.encryptionKeys.get(iteration);
 			}
-			
-        
-     		fileOutputStream.write(message);
-        	
-        	JOptionPane.showMessageDialog(this.application, "Poruka je poslata!");
-		} catch (PGPException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			String sentMessageName = "S" + String.valueOf(iteration)+"_"+(new Date().getTime())+"_"+sourceFile.getName() + ".gpg";
+			try (FileOutputStream fileOutputStream = new FileOutputStream(
+					this.destinationPath + "\\" + sentMessageName)) {
+
+				// message should be authenticated - signed if signKey is selected
+				if (this.signKey != null) {
+					message = MessagePgpOperations.sign(message, this.signKey, this.passphrase);
+				}
+
+				// message should be encrypted if encryption key for session key encryption is
+				// selected
+				if (iterationPublicKeyForSessionKeyEncryption != null) {
+					message = MessagePgpOperations.encrypt(message, iterationPublicKeyForSessionKeyEncryption,
+							MessageSenderForm.getSymetricAlgorithmIntValue(this.symmetricKeyAlgorithm));
+				}
+
+				fileOutputStream.write(message);
+
+				JOptionPane.showMessageDialog(this.application, "Poruka:" + sentMessageName+ " je poslata!");
+			} catch (PGPException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 
 		return null;
+	}
+
+	public static int getSymetricAlgorithmIntValue(String symetricAlgorithm) {
+		return ("3DES".equals(symetricAlgorithm)) ? SymmetricKeyAlgorithmTags.TRIPLE_DES
+				: SymmetricKeyAlgorithmTags.AES_128;
 	}
 
 }
