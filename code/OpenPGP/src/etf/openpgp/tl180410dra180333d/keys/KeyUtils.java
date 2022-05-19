@@ -118,9 +118,7 @@ public class KeyUtils {
 			PGPDigestCalculator hashCalculator = new JcaPGPDigestCalculatorProviderBuilder().build()
 					.get(HashAlgorithmTags.SHA1);
 			PGPContentSignerBuilder signerBuilder = new JcaPGPContentSignerBuilder(
-					dsaKeyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA256); // we must change this because
-																							// DSA 2048 requires 256
-																							// sign
+					dsaKeyPair.getPublicKey().getAlgorithm(), KeyUtils.getHashAlgorithmTag(signAlgorithm)); // we must change this because DSA 2048 requires 256-bit as sign length
 			PBESecretKeyEncryptor privateKeyEncriptor = new JcePBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_128,
 					hashCalculator).setProvider("BC").build(passphrase.toCharArray());
 
@@ -423,5 +421,27 @@ public class KeyUtils {
     private static final BigInteger getBaseGenerator() {
         return new BigInteger("2", 16);
     }
+    
+    
+    public PGPSecretKeyRing getPgpPrivateKeyRingById(long keyId) throws PGPException {
+    	return this.privateKeyRingCollection.getSecretKeyRing(keyId);
+    }
+    
+    public PGPPublicKeyRing getPgpPublicKeyRingById(long keyId) throws PGPException {
+    	return this.publicKeyRingCollection.getPublicKeyRing(keyId);
+    }
+    
+	public static int getHashAlgorithmTag(String signAlgorithm) {
+		if("DSA 2048".equals(signAlgorithm)) {
+			return HashAlgorithmTags.SHA256;
+		}
+		return HashAlgorithmTags.SHA1;
+	}
+	public static int getHashAlgorithmTag(int signAlgorithm, int keySize) {
+		if((signAlgorithm == PGPPublicKey.DSA) && (keySize==2048)) {
+			return HashAlgorithmTags.SHA256;
+		}
+		return HashAlgorithmTags.SHA1;
+	}
 
 }

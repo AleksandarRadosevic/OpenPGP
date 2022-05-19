@@ -40,7 +40,7 @@ public class MessageSender {
 
 	public MessageSender(Application application) {
 		this.application = application;
-		messageSenderForm = new MessageSenderForm();
+		messageSenderForm = new MessageSenderForm(this.application);
 	}
 	
 	public void initializeApplicationPanel(JPanel sendMessagePanel) {
@@ -169,11 +169,11 @@ public class MessageSender {
 				messageSenderForm.setSymmetricKeyAlgorithm((String) jcomboAlgorithm.getSelectedItem());
 				messageSenderForm.setRadix64(jcRadix64.isSelected());
 				messageSenderForm.setZip(jcZip.isSelected());
-				String validationMessage = messageSenderForm.isValid();
-				if (validationMessage!=null) {
+				String sendMessageError = messageSenderForm.sendMessage();
+				if (sendMessageError!=null) {
 					JOptionPane.showMessageDialog(application,
-							validationMessage,
-							"Validation error", JOptionPane.ERROR_MESSAGE);
+							sendMessageError,
+							"Error - Send operation failed", JOptionPane.ERROR_MESSAGE);
 				}
 			}
 		});
@@ -189,7 +189,7 @@ public class MessageSender {
 				jlistEncryptionKeys.clearSelection();
 				jcRadix64.setSelected(false);
 				jcZip.setSelected(false);
-				messageSenderForm = new MessageSenderForm();
+				messageSenderForm = new MessageSenderForm(MessageSender.this.application);
 			}
 		});
 	}
@@ -216,8 +216,5 @@ public class MessageSender {
 		return null;
 	}
 	
-	private void checkFormData() {
-		
-	}
 	
 }

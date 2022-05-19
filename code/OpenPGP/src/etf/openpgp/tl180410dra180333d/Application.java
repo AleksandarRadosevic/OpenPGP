@@ -34,12 +34,15 @@ import javax.swing.JTextField;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
+import org.bouncycastle.bcpg.HashAlgorithmTags;
+import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.PGPUtil;
 
 import etf.openpgp.tl180410dra180333d.keys.KeyUtils;
 import etf.openpgp.tl180410dra180333d.keys.OperationResult;
@@ -611,6 +614,10 @@ public class Application extends JFrame {
 			return path.toString();
 		}
 		return null;
+	}
+
+	public KeyUtils getKeyUtils() {
+		return keyUtils;
 	}
 
 	public static void main(String[] args) {
