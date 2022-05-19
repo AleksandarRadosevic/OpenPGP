@@ -38,6 +38,9 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import etf.openpgp.tl180410dra180333d.Application;
 import etf.openpgp.tl180410dra180333d.keys.OperationResult.IMPORT_OPERATION_RESULT;
 
+/**
+ * Pomocna klasa koja pruza podrsku za rad sa kljucevima: generisanje, uvoz, izvoz, brisanje itd.
+ */
 public class KeyUtils {
 
 	private final File privateKeyRingCollectionFile = new File(
@@ -49,7 +52,12 @@ public class KeyUtils {
 	private PGPPublicKeyRingCollection publicKeyRingCollection;
 
 	private Application application = null;
-
+	
+	/**
+	 * Konstruktor koji kao parametar ima aplikaciju u kojoj je neophodno azurirati prikaz kada se model prstenova u ovoj klasi promeni.
+	 * U okviru konstruktora se inicijalizuje model prstenova kljuceva podacima koji se cuvaju na disku, ako postoje.
+	 * @param Application application
+	 */
 	public KeyUtils(Application application) {
 		try {
 			this.publicKeyRingCollection = new PGPPublicKeyRingCollection(new LinkedList<>());
@@ -94,6 +102,14 @@ public class KeyUtils {
 
 	}
 
+	/**
+	 * Metoda koja sluzi za generisanje jednog privatnog para kljuca(potpisivanje, sifrovanje)
+	 * @param String userId - id vlasnika kljuca
+	 * @param String signAlgorithm - algoritam koji se koristi za potpisivanje
+	 * @param encryptionAlgorithm - algoritam koji se koristi za sifrovanje kljuca sesije
+	 * @param passphrase - zastitna lozinka za privatni kljuc(koristi se njen hes za zastitu privatnog kljuca)
+	 * @return vrednost boolean(logickog) tipa koja prestavlja uspesnost operacije
+	 */
 	public boolean generatePrivateRingKey(String userId, String signAlgorithm, String encryptionAlgorithm,
 			String passphrase) {
 
@@ -217,8 +233,12 @@ public class KeyUtils {
 		return true;
 	}
 
-	// private key ring operations start
-
+	/**
+	 * Metoda koja sluzi za brisanje para kljuceva iz privatnog prstena kljuceva
+	 * @param long privateKeyRingId - id kljuca za potpisivanje predstavlja id kljuca jednog tog para u kolekciji (ring in collection ring)
+	 * @param String passphrase - lozinka kojom se stiti privatni kljuc
+	 * @return vrednost boolean(logickog) tipa koja prestavlja uspesnost operacije 
+	 */
 	public boolean deletePrivateKeyRing(long privateKeyRingId, String passphrase) {
 		try {
 			PGPSecretKeyRing privateKeyRing = this.privateKeyRingCollection.getSecretKeyRing(privateKeyRingId);
@@ -244,6 +264,13 @@ public class KeyUtils {
 		return true;
 	}
 
+	/**
+	 * Metoda koja sluzi da se izveze par kljuceva( potpisivanje, sifrovanje) iz privatnog prstena kljuceva
+	 * @param long keyId - id kljuca za potpisivanje predstavlja id kljuca jednog tog para u kolekciji (ring in collection ring)
+	 * @param String userId - id vlasnika kljuca (prosledjuje se zbog imenovanja fajla) /moglo je da se dogvati i iz samog para kljuceva( potpisivanje, sifrovanje)/
+	 * @param String selectedExportPath -putanja za cuvanje .asc fajla na disku
+	 * @return vrednost boolean(logickog) tipa koja prestavlja uspesnost operacije
+	 */
 	public boolean exportPrivateKeyRing(long keyId, String userId, String selectedExportPath) {
 		PGPSecretKeyRing secretKeyRing;
 		try {
@@ -279,6 +306,11 @@ public class KeyUtils {
 		return false;
 	}
 
+	/**
+	 * Metoda za uvoz para kljuceva( sifrovanje, potpisivanje) u prsten privatnih kljuceva
+	 * @param File file - .asc fajl iz koga se uvozi
+	 * @return IMPORT_OPERATION_RESULT - ishod operacije (nabrojivi tip)
+	 */
 	public IMPORT_OPERATION_RESULT importPrivateKeyRing(File file) {
 		try (InputStream inputStream = new ArmoredInputStream(new FileInputStream(file.toString()))) {
 			PGPSecretKeyRing secretKeyRing = new PGPSecretKeyRing(inputStream, new JcaKeyFingerprintCalculator());
@@ -304,9 +336,11 @@ public class KeyUtils {
 		return IMPORT_OPERATION_RESULT.FAILURE;
 	}
 
-	// private key ring operations end
-
-	// public key rings operations start
+	/**
+	 * Metoda koja sluzi za brisanje para kljuceva iz javnog prstena kljuceva
+	 * @param long publicKeyRingId - id kljuca za potpisivanje predstavlja id kljuca jednog tog para u kolekciji (ring in collection ring)
+	 * @return vrednost boolean(logickog) tipa koja prestavlja uspesnost operacije 
+	 */
 	public boolean deletePublicKeyRing(long publicKeyRingId) {
 		try {
 			PGPPublicKeyRing publicKeyRing = this.publicKeyRingCollection.getPublicKeyRing(publicKeyRingId);			
@@ -324,6 +358,11 @@ public class KeyUtils {
 		
 	}
 
+	/**
+	 * Metoda za uvoz para kljuceva( sifrovanje, potpisivanje) u prsten javnih kljuceva
+	 * @param File file - .asc fajl iz koga se uvozi
+	 * @return IMPORT_OPERATION_RESULT - ishod operacije (nabrojivi tip)
+	 */
 	public IMPORT_OPERATION_RESULT importPublicKeyRing(File file) {
 		try (InputStream inputStream = new ArmoredInputStream(new FileInputStream(file.toString()))) {
 			PGPPublicKeyRing publicKeyRing = new PGPPublicKeyRing(inputStream, new JcaKeyFingerprintCalculator());
@@ -345,6 +384,13 @@ public class KeyUtils {
 		return IMPORT_OPERATION_RESULT.FAILURE;
 	}
 
+	/**
+	 * Metoda koja sluzi da se izveze par kljuceva( potpisivanje, sifrovanje) iz javnog prstena kljuceva
+	 * @param long keyId - id kljuca za potpisivanje predstavlja id kljuca jednog tog para u kolekciji (ring in collection ring)
+	 * @param String userId - id vlasnika kljuca (prosledjuje se zbog imenovanja fajla) /moglo je da se dogvati i iz samog para kljuceva( potpisivanje, sifrovanje)/
+	 * @param String selectedExportPath -putanja za cuvanje .asc fajla na disku
+	 * @return vrednost boolean(logickog) tipa koja prestavlja uspesnost operacije
+	 */
 	public boolean exportPublicKeyRing(long keyId, String userId, String selectedExportPath) {
 		PGPPublicKeyRing publicKeyRing;
 		try {
@@ -381,15 +427,13 @@ public class KeyUtils {
 		return false;
 	}
 
-	// public key rings operations end
 	
     /**
-     * Based on rfc3526
+     * Parametar preuzet iz RFC3526
      * 
-     * This is a 4096 bit MODP Group 
      * Prime number is: 2^4096 - 2^4032 - 1 + 2^64 * { [2^3996 pi] + 240904 }
      * 
-     * @return a 4096 bit MODP group safe prime modulus
+     * @return prost moduo za 4096 bit MODP grupu
      */
     private static final BigInteger getPrime4096() {
             StringBuilder sb = new StringBuilder();
@@ -418,25 +462,53 @@ public class KeyUtils {
             return new BigInteger(sb.toString(), 16);
     }
     
+    /**
+     * Parametar preuzet iz RFC3526
+     * 
+     * @return generator za 4096 bit MODP grupu
+     */
     private static final BigInteger getBaseGenerator() {
         return new BigInteger("2", 16);
     }
     
-    
+    /**
+     * Metoda za dohvatanje para kljuceva(potpisivanje, sifrovanje) iz kolekcije prstena privatnih kljuceva
+     * @param long keyId - id para kljuceva (id kljuca za potpisivanje)
+     * @return par kljuceva(potpisivanje, sifrovanje) iz kolekcije prstena privatnih kljuceva
+     * @throws PGPException
+     */
     public PGPSecretKeyRing getPgpPrivateKeyRingById(long keyId) throws PGPException {
     	return this.privateKeyRingCollection.getSecretKeyRing(keyId);
     }
     
+    /**
+     * Metoda za dohvatanje para kljuceva(potpisivanje, sifrovanje) iz kolekcije prstena javnih kljuceva
+     * @param long keyId - id para kljuceva (id kljuca za potpisivanje)
+     * @return par kljuceva(potpisivanje, sifrovanje) iz kolekcije prstena javnih kljuceva
+     * @throws PGPException
+     */
     public PGPPublicKeyRing getPgpPublicKeyRingById(long keyId) throws PGPException {
     	return this.publicKeyRingCollection.getPublicKeyRing(keyId);
     }
     
+    /**
+     * Staticka metoda koja vraca informaciju o tome koji je hash algoritam potrebno koristit za generisanje potpisa na osnovu algoritma kojim se hes sifruje
+     * @param String signAlgorithm - algoritam i velicina kljuca koji se koriste za potpisivanje (npr. DSA 2048)
+     * @return hes algoritam tag algoritma koji treba da se koristi za formiranje hes-a
+     */
 	public static int getHashAlgorithmTag(String signAlgorithm) {
 		if("DSA 2048".equals(signAlgorithm)) {
 			return HashAlgorithmTags.SHA256;
 		}
 		return HashAlgorithmTags.SHA1;
 	}
+	
+    /**
+     * Staticka metoda koja vraca informaciju o tome koji je hash algoritam potrebno koristit za generisanje potpisa na osnovu algoritma kojim se hes sifruje
+     * @param int signAlgorithm - algoritam koji koristi kljuc za potpisivanje(npr. dsa)
+     * @param int keySize - velicina kljuca
+     * @return hes algoritam tag algoritma koji treba da se koristi za formiranje hes-a
+     */
 	public static int getHashAlgorithmTag(int signAlgorithm, int keySize) {
 		if((signAlgorithm == PGPPublicKey.DSA) && (keySize==2048)) {
 			return HashAlgorithmTags.SHA256;

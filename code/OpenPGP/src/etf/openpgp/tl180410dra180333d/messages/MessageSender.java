@@ -29,6 +29,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import etf.openpgp.tl180410dra180333d.Application;
 
+/**
+ * Klasa za upravljanje GUI-jem slanja poruke.
+ */
 public class MessageSender {
 	private Application application;
 	private JComboBox<String> jcomboAutenticationKeys;
@@ -38,11 +41,18 @@ public class MessageSender {
 	private File selectedMessageFile = null;
 	private Path messageDestinationPath = null;
 
+	/**
+	 * @param Application application - aplikacija za koju pravimo gui za slanje.
+	 */
 	public MessageSender(Application application) {
 		this.application = application;
 		messageSenderForm = new MessageSenderForm(this.application);
 	}
 	
+	/**
+	 * Metoda za inicijalizaciju GUI-ja za slanje
+	 * @param JPanel sendMessagePanel - panel u aplikaciji koji inicijalizujemo
+	 */
 	public void initializeApplicationPanel(JPanel sendMessagePanel) {
 		sendMessagePanel.setLayout(new BorderLayout());
 
@@ -211,11 +221,18 @@ public class MessageSender {
 		});
 	}
 	
-	
+	/**
+	 * Metoda za dohvatanje combobox-a koji sadrzi kljuceve za autentikaciju
+	 * @return combobox koji sadrzi kljuceve za autentikaciju
+	 */
 	public JComboBox<String> getJcomboAutenticationKeys() {
 		return jcomboAutenticationKeys;
 	}
 
+	/**
+	 * Metoda za dohvatanje JList-e koja sadrzi kljuceve za sifrovanje kljuca sesije
+	 * @return JList-a koja sadrzi kljuceve za sifrovanje kljuca sesije
+	 */
 	public JList<String> getJlistEncryptionKeys() {
 		return jlistEncryptionKeys;
 	}

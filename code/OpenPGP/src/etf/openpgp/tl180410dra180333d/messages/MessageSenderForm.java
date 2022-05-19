@@ -24,6 +24,11 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 
 import etf.openpgp.tl180410dra180333d.Application;
 
+/**
+ * Klasa koja upravlja PRP procesom slanja poruke koristeci operacije koje pruza MessagePgpOperation klasa
+ * @author Luka
+ *
+ */
 public class MessageSenderForm {
 
 	private Application application;
@@ -39,26 +44,33 @@ public class MessageSenderForm {
 	private boolean radix64 = false;
 	private boolean zip = false;
 
+	/**
+	 * @param Application application - referenca na aplikaciju preko koje cemo doci do modela prstenova kljuceva, kako bi dosli do potrebnih
+	 */
 	public MessageSenderForm(Application application) {
 		this.application = application;
 	}
-
-	public File getSourceFile() {
-		return sourceFile;
-	}
-
+	
+	/**
+	 * Seter za fajl koji treba da se posalje kao poruka
+	 * @param File sourceFile
+	 */
 	public void setSourceFile(File sourceFile) {
 		this.sourceFile = sourceFile;
 	}
 
-	public String getDestinationPath() {
-		return destinationPath;
-	}
-
+	/**
+	 * Seter za putanju na koju se salje poruka
+	 * @param String destination - putanja
+	 */
 	public void setDestinationPath(String destination) {
 		this.destinationPath = destination;
 	}
 
+	/**
+	 * Seter za kljuc za autentikaciju
+	 * @param String authenticationKeySelected - odabrani id kljuca za autentikaciju
+	 */
 	public void setAuthenticationKey(String authenticationKeySelected) {
 		if((authenticationKeySelected==null)||authenticationKeySelected.length()==0) {
 			return;
@@ -80,6 +92,10 @@ public class MessageSenderForm {
 		}
 	}
 
+	/**
+	 * Seter za kljuceve za sifrovanje kljuca sesije
+	 * @param Vector<String> encryptionKeyStrings - vektor id-jeva kljuceva koji se koriste za sifrovanje kljuca sesije
+	 */
 	public void setEncryptionKeys(Vector<String> encryptionKeyStrings) {
 		List<PGPPublicKey> encriptionPublicKeyList = new ArrayList<>();
 
@@ -114,26 +130,26 @@ public class MessageSenderForm {
 		this.encryptionKeys = encriptionPublicKeyList;
 	}
 
-	public String getSymmetricKeyAlgorithm() {
-		return symmetricKeyAlgorithm;
-	}
-
+	/**
+	 * Seter za algoritam koji se koristi za simetricno sifrovanje poruke
+	 * @param String symmetricKeyAlgorithm
+	 */
 	public void setSymmetricKeyAlgorithm(String symmetricKeyAlgorithm) {
 		this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
 	}
 
-	public boolean isRadix64() {
-		return radix64;
-	}
-
+	/**
+	 * Seter za informaciju o tome da li je potrebno vrsiti konverziju prouke u radix64 format
+	 * @param boolean radix64
+	 */
 	public void setRadix64(boolean radix64) {
 		this.radix64 = radix64;
 	}
 
-	public boolean isZip() {
-		return zip;
-	}
-
+	/**
+	 * Seter za informaciju o tome da li je potrebno vrsiti kompresiju poruke u zip format
+	 * @param boolean zip
+	 */
 	public void setZip(boolean zip) {
 		this.zip = zip;
 	}
@@ -169,8 +185,8 @@ public class MessageSenderForm {
 	}
 
 	/**
-	 * 
-	 * @return null if form is valid else error message
+	 * Metoda koja u okviru sebe poziva metodu za verifikovanje ulaznih podataka u proces slanja i vrsi samo slanje
+	 * @return poruka o eventualnoj gresci prilikom slanja, vrednost null ako nema gresaka
 	 */
 	public String sendMessage() {
 		String validMessageError = this.isValid();
@@ -234,6 +250,12 @@ public class MessageSenderForm {
 		return null;
 	}
 
+	/**
+	 * Pomocna staticka metoda za konverziju naziva algoritma u njegov pandan celobrojnog tipa koje zahtevaju funkcije za sifrovanje.
+	 * Podrzani algoritmi su 3DES i AES-128
+	 * @param String symetricAlgorithm - naziv simetricnog algoritma
+	 * @return
+	 */
 	public static int getSymetricAlgorithmIntValue(String symetricAlgorithm) {
 		return ("3DES".equals(symetricAlgorithm)) ? SymmetricKeyAlgorithmTags.TRIPLE_DES
 				: SymmetricKeyAlgorithmTags.AES_128;

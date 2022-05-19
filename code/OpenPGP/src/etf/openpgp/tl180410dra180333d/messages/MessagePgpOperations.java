@@ -26,8 +26,22 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePublicKeyKeyEncryptionMethodG
 
 import etf.openpgp.tl180410dra180333d.keys.KeyUtils;
 
+/**
+ * Klasa koja obezbedjuje operacije prilikom slanja i prijema poruke koristeci PGP protokol
+ * @author Luka
+ *
+ */
 public class MessagePgpOperations {
 
+	/**
+	 * Operacija koja potpicuje poruku(niz bajtova)
+	 * @param byte[] dataToBeSigned - poruka za potpisivanje
+	 * @param PGPSecretKey signKey - privatni kljuc koji se koristi za potpisivanje
+	 * @param passphrase - lozinka za zastitu privatnog kljuca koji se koristi za potpisivanje
+	 * @return potpisana poruka(niz bajtova)
+	 * @throws PGPException
+	 * @throws IOException
+	 */
 	public static byte[] sign(byte[] dataToBeSigned, PGPSecretKey signKey, String passphrase)
 			throws PGPException, IOException {
 
@@ -65,6 +79,15 @@ public class MessagePgpOperations {
 		return byteOutputStream.toByteArray();
 	}
 
+	/**
+	 * Operacija za sifrovanje poruke( niza bajtova)
+	 * @param byte[] bytesToBeEncrypted - poruka za sifrovanje
+	 * @param PGPPublicKey encryptionKey - javni kljuc koji se koristi za sifrovanje
+	 * @param int symetricEncryptionAlgorithm - identifikator simetricnog algoritma koji se koristi pri sifrovanju
+	 * @return sifrovana poruka( niz bajtova)
+	 * @throws IOException
+	 * @throws PGPException
+	 */
 	public static byte[] encrypt(byte[] bytesToBeEncrypted, PGPPublicKey encryptionKey, int symetricEncryptionAlgorithm) throws IOException, PGPException {
 		ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
 		
@@ -84,6 +107,12 @@ public class MessagePgpOperations {
         return byteOutputStream.toByteArray();
 	}
 
+	/**
+	 * Operacija za zipovanje poruke( niza bajtova)
+	 * @param byte[] bytesToBeZiped - niz bajtova za kompresiju(poruka pre kompresije)
+	 * @return kompresovana poruka( niz bajtova) u ZIP formatu
+	 * @throws IOException
+	 */
 	public static byte[] zip(byte[] bytesToBeZiped) throws IOException {
 		ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
 		
@@ -98,6 +127,12 @@ public class MessagePgpOperations {
 		return byteOutputStream.toByteArray();
 	}
 	
+	/**
+	 * Operacija za konverziju poruke( niza bajtova) u radix64 format
+	 * @param byte[] bytesToBeConvertedIntoRadix64 - niz bajtova za konverziju(poruka pre konverzije)
+	 * @return kkonvertovana poruka( niz bajtova) u radix64 format
+	 * @throws IOException
+	 */
 	public static byte[] convertToRadix64(byte[] bytesToBeConvertedIntoRadix64) throws IOException{
         ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
         

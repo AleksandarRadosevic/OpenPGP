@@ -433,7 +433,11 @@ public class Application extends JFrame {
 				passphrase);
 
 	}
-
+	
+	/**
+	 * Metoda za osvezavanje prikaza kljuceva kada se kolekcija privatnih kljuceva promeni
+	 * @param PGPSecretKeyRingCollection privateKeyRingCollection
+	 */
 	public void update_privateKeyRingTableModel(PGPSecretKeyRingCollection privateKeyRingCollection) {
 		this.privateKeyRingTableModel.setRowCount(0); // clear table model
 		
@@ -476,6 +480,10 @@ public class Application extends JFrame {
 		this.messageSender.getJcomboAutenticationKeys().setModel(authenticationKeyListModel);
 	}
 
+	/**
+	 * Metoda za osvezavanje prikaza kljuceva kada se kolekcija javnih kljuceva promeni
+	 * @param PGPPublicKeyRingCollection publicKeyRingCollection
+	 */
 	public void update_publicKeyRingTableModel(PGPPublicKeyRingCollection publicKeyRingCollection) {
 		this.publicKeyRingTableModel.setRowCount(0); // clear table model
 
