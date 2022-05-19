@@ -209,16 +209,16 @@ public class MessageSenderForm {
 				if(this.zip) {
 					message = MessagePgpOperations.zip(message);
 				}
-				
-				if(this.radix64) {
-					message = MessagePgpOperations.convertToRadix64(message);
-				}
 
 				// message should be encrypted if encryption key for session key encryption is
 				// selected
 				if (iterationPublicKeyForSessionKeyEncryption != null) {
 					message = MessagePgpOperations.encrypt(message, iterationPublicKeyForSessionKeyEncryption,
 							MessageSenderForm.getSymetricAlgorithmIntValue(this.symmetricKeyAlgorithm));
+				}
+				
+				if(this.radix64) {
+					message = MessagePgpOperations.convertToRadix64(message);
 				}
 
 				fileOutputStream.write(message);
