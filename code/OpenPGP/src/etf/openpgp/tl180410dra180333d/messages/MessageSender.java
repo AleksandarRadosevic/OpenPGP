@@ -33,13 +33,14 @@ public class MessageSender {
 	private Application application;
 	private JComboBox<String> jcomboAutenticationKeys;
 	private JList<String> jlistEncryptionKeys;
-	
+	private MessageSenderForm messageSenderForm;
 	
 	private File selectedMessageFile = null;
 	private Path messageDestinationPath = null;
 
 	public MessageSender(Application application) {
 		this.application = application;
+		messageSenderForm = new MessageSenderForm();
 	}
 	
 	public void initializeApplicationPanel(JPanel sendMessagePanel) {
@@ -74,9 +75,9 @@ public class MessageSender {
 				fileChooser.setDialogTitle("Select message");
 				int result = fileChooser.showOpenDialog(application);
 				if (result == JFileChooser.APPROVE_OPTION) {
-					MessageSender.this.selectedMessageFile = fileChooser.getSelectedFile();
-					String selectedMessageFilePath = selectedMessageFile.getAbsolutePath();
-					jlSourceFileSelected.setText(selectedMessageFile.getName());
+					messageSenderForm.setSourceFile(fileChooser.getSelectedFile());
+					String selectedMessageFilePath = messageSenderForm.getSourceFile().getAbsolutePath();
+					jlSourceFileSelected.setText(messageSenderForm.getSourceFile().getName());
 				}
 			}
 		});
@@ -97,8 +98,9 @@ public class MessageSender {
 		jbtnDestination.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				MessageSender.this.messageDestinationPath = MessageSender.this.selectDestinationDialog();
-				jlDestinationSelected.setText(MessageSender.this.messageDestinationPath.toString());
+				Path path = MessageSender.this.selectDestinationDialog();
+				jlDestinationSelected.setText(path.toString());
+				messageSenderForm.setDestinationPath(path.toString());
 			}
 		});
 		
@@ -122,8 +124,12 @@ public class MessageSender {
 		
 				
 		// choose symmetric algorithm
-		JLabel jlAlgorithm = new JLabel("Choose symmetric key algorithm");
-		JComboBox<String>jcomboAlgorithm = new JComboBox<>(Application.symmetricAlgorithms);
+		JLabel jlAlgorithm = new JLabel("Choose symmetric key algorithm (Optional)");
+		String [] symmetricAlgorithms = new String[Application.symmetricAlgorithms.length+1];
+		System.arraycopy(new String[] {null}, 0, symmetricAlgorithms, 0, 1);
+	    System.arraycopy(Application.symmetricAlgorithms, 0, symmetricAlgorithms, 1, Application.symmetricAlgorithms.length);
+		JComboBox<String>jcomboAlgorithm = new JComboBox<>(symmetricAlgorithms);
+		
 		sendMessageFormPanel.add(jlAlgorithm);
 		sendMessageFormPanel.add(jcomboAlgorithm);
 		
@@ -154,10 +160,41 @@ public class MessageSender {
 		
 		sendMessagePanel.add(jpControlsSendMessageForm,BorderLayout.SOUTH);
 		
+		jbtnSend.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				messageSenderForm.setAuthenticationKey((String) jcomboAutenticationKeys.getSelectedItem());	
+				messageSenderForm.setEncryptionKeys(new Vector<>(jlistEncryptionKeys.getSelectedValuesList()));
+				messageSenderForm.setSymmetricKeyAlgorithm((String) jcomboAlgorithm.getSelectedItem());
+				messageSenderForm.setRadix64(jcRadix64.isSelected());
+				messageSenderForm.setZip(jcZip.isSelected());
+				String validationMessage = messageSenderForm.isValid();
+				if (validationMessage!=null) {
+					JOptionPane.showMessageDialog(application,
+							validationMessage,
+							"Validation error", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		});
 		
-		
+		jbtnCancel.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				jlSourceFileSelected.setText("No selected source file (required).");
+				jlDestinationSelected.setText("No selected destination (required).");
+				jcomboAutenticationKeys.setSelectedIndex(0);
+				jcomboAlgorithm.setSelectedIndex(0);
+				jlistEncryptionKeys.clearSelection();
+				jcRadix64.setSelected(false);
+				jcZip.setSelected(false);
+				messageSenderForm = new MessageSenderForm();
+			}
+		});
 	}
-
+	
+	
 	public JComboBox<String> getJcomboAutenticationKeys() {
 		return jcomboAutenticationKeys;
 	}
@@ -177,6 +214,10 @@ public class MessageSender {
 			return path;
 		}
 		return null;
+	}
+	
+	private void checkFormData() {
+		
 	}
 	
 }

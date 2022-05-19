@@ -352,8 +352,8 @@ public class Application extends JFrame {
 				boolean ret = insertNewPrivateKeyRing(name, email, signAlgorithm, encryptionAlgorithm);
 				if (!ret) {
 					JOptionPane.showMessageDialog(Application.this,
-							"Nije uspelo dodavanje kljuca, sva polja su obavezna kao i passphrase za cuvanje privatnog kljuca!",
-							"Greska pri dodavanju kljuca", JOptionPane.ERROR_MESSAGE);
+							"All fields are required and passphrase must be correct!",
+							"Key generation error", JOptionPane.ERROR_MESSAGE);
 				}
 			}
 		});
@@ -435,7 +435,7 @@ public class Application extends JFrame {
 		this.privateKeyRingTableModel.setRowCount(0); // clear table model
 		
 		DefaultComboBoxModel<String> authenticationKeyListModel = new DefaultComboBoxModel<>();
-		
+		authenticationKeyListModel.addElement(null);
 		Iterator<PGPSecretKeyRing> privateKeyRingIterator = privateKeyRingCollection.getKeyRings();
 
 		while (privateKeyRingIterator.hasNext()) {
