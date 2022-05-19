@@ -6,8 +6,10 @@ import java.io.OutputStream;
 import java.security.SecureRandom;
 import java.util.Date;
 
+import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
+import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralData;
@@ -82,6 +84,31 @@ public class MessagePgpOperations {
         return byteOutputStream.toByteArray();
 	}
 
+	public static byte[] zip(byte[] bytesToBeZiped) throws IOException {
+		ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+		
+		PGPCompressedDataGenerator pgpCompressedDataGenerator = new PGPCompressedDataGenerator(PGPCompressedDataGenerator.ZIP);
+		
+		OutputStream compressedOutputStream = pgpCompressedDataGenerator.open(byteOutputStream);
+		compressedOutputStream.write(bytesToBeZiped);
+		
+		compressedOutputStream.close();
+		byteOutputStream.close();
+		
+		return byteOutputStream.toByteArray();
+	}
 	
+	public static byte[] convertToRadix64(byte[] bytesToBeConvertedIntoRadix64) throws IOException{
+        ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+        
+        ArmoredOutputStream radix64OutputStream = new ArmoredOutputStream(byteOutputStream);
+        
+        radix64OutputStream.write(bytesToBeConvertedIntoRadix64);
+        
+        radix64OutputStream.close();
+        byteOutputStream.close();
+        
+        return byteOutputStream.toByteArray();
+	}
 
 }

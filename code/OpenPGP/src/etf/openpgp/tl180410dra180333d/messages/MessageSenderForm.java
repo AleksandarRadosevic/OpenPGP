@@ -60,6 +60,9 @@ public class MessageSenderForm {
 	}
 
 	public void setAuthenticationKey(String authenticationKeySelected) {
+		if((authenticationKeySelected==null)||authenticationKeySelected.length()==0) {
+			return;
+		}
 		String[] authenticationKeySelectedParts = authenticationKeySelected.split(" ");
 		long authenticationKeyId = new BigInteger(
 				authenticationKeySelectedParts[authenticationKeySelectedParts.length - 1], 16).longValue();
@@ -200,6 +203,15 @@ public class MessageSenderForm {
 				// message should be authenticated - signed if signKey is selected
 				if (this.signKey != null) {
 					message = MessagePgpOperations.sign(message, this.signKey, this.passphrase);
+				}
+				
+				// zip compression
+				if(this.zip) {
+					message = MessagePgpOperations.zip(message);
+				}
+				
+				if(this.radix64) {
+					message = MessagePgpOperations.convertToRadix64(message);
 				}
 
 				// message should be encrypted if encryption key for session key encryption is
