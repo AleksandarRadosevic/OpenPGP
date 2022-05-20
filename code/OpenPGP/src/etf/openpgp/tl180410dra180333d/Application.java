@@ -623,7 +623,11 @@ public class Application extends JFrame {
 		}
 		return null;
 	}
-
+	
+	/**
+	 * 
+	 * @return referenca na objekat klase koja upravlja kljucevima
+	 */
 	public KeyUtils getKeyUtils() {
 		return keyUtils;
 	}

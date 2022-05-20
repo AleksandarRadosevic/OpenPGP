@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -163,7 +164,7 @@ public class MessageSenderForm {
 			return "Source file is missing!";
 		if (this.destinationPath == null)
 			return "Destination path is missing!";
-		if((this.symmetricKeyAlgorithm!=null)&&this.encryptionKeys.size()==0) {
+		if((this.symmetricKeyAlgorithm!=null) && this.encryptionKeys.size()==0) {
 			return "Public key for session key encryption must be selected!";
 		}
 		if (this.signKey != null) {
@@ -196,8 +197,9 @@ public class MessageSenderForm {
 
 		byte[] message = null;
 
+		byte[] originalMessage = null;
 		try {
-			message = Files.readAllBytes(this.sourceFile.toPath());
+			originalMessage = Files.readAllBytes(this.sourceFile.toPath());
 		} catch (Exception e) {
 			return "Source file can not be read!";
 		}
@@ -207,7 +209,7 @@ public class MessageSenderForm {
 		}
 
 		for (int iteration = 0; iteration < iterationCount; iteration++) {
-
+			message = Arrays.copyOf(originalMessage, originalMessage.length);
 			PGPPublicKey iterationPublicKeyForSessionKeyEncryption = null;
 			if (this.encryptionKeys.size() > iteration) {
 				iterationPublicKeyForSessionKeyEncryption = this.encryptionKeys.get(iteration);
