@@ -151,12 +151,16 @@ public class MessageReceiver {
 
 				dataForReading = encryptedData.getDataStream(decryptorFactory).readAllBytes();
 			} catch (IOException e) {
-				e.printStackTrace();
+				JOptionPane.showMessageDialog(application, "You don't have secret key to decrypt message!",
+						"Decryption error", JOptionPane.ERROR_MESSAGE);
+				//e.printStackTrace();
+				return ;
 			} catch (PGPException e) {
 				// secret key doesn't exists!
 				JOptionPane.showMessageDialog(application, "You don't have secret key to decrypt message!",
 						"Decryption error", JOptionPane.ERROR_MESSAGE);
-				e.printStackTrace();
+				//e.printStackTrace();
+				return ;
 			}
 			// decryption finished
 		}
@@ -232,8 +236,8 @@ public class MessageReceiver {
 		Color defaultColor = UIManager.getColor("Panel.background");
 		UIManager UI = new UIManager();
 
-		UI.put("OptionPane.background", Color.GREEN);
-		UI.put("Panel.background", Color.GREEN);
+		UI.put("OptionPane.background", new Color(0x80ffbf));
+		UI.put("Panel.background", new Color(0x80ffbf));
 
 		JPanel jPanelInfo = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
