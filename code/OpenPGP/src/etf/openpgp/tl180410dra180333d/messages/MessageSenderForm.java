@@ -214,6 +214,9 @@ public class MessageSenderForm {
 			if (this.encryptionKeys.size() > iteration) {
 				iterationPublicKeyForSessionKeyEncryption = this.encryptionKeys.get(iteration);
 			}
+			String extension = null;
+			int index = sourceFile.toString().lastIndexOf('.');
+			extension = sourceFile.toString().substring(index);
 			String sentMessageName = "S" + String.valueOf(iteration)+"_"+(new Date().getTime())+"_"+sourceFile.getName() + ".gpg";
 			try (FileOutputStream fileOutputStream = new FileOutputStream(
 					this.destinationPath + "\\" + sentMessageName)) {

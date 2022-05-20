@@ -35,6 +35,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
 import org.bouncycastle.bcpg.HashAlgorithmTags;
+import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -88,7 +89,7 @@ public class Application extends JFrame {
 		this.setSize(1080, 720);
 
 		this.messageSender = new MessageSender(this);
-		this.messageReceiver = new MessageReceiver(null);
+		this.messageReceiver = new MessageReceiver(this);
 		
 		this.initialization();
 
@@ -634,5 +635,7 @@ public class Application extends JFrame {
 
 	public static void main(String[] args) {
 		Application app = new Application();
+		//3des 2
+		//aes 128 7
 	}
 }

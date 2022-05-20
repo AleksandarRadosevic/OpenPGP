@@ -1,16 +1,21 @@
 package etf.openpgp.tl180410dra180333d.messages;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.SecureRandom;
 import java.util.Date;
 
+import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
+import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
+import org.bouncycastle.openpgp.PGPEncryptedDataList;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
@@ -19,6 +24,8 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
@@ -142,6 +149,59 @@ public class MessagePgpOperations {
         byteOutputStream.close();
         
         return byteOutputStream.toByteArray();
+	}
+
+	public static byte[] verifySign(byte[] dateToBeVerified) {
+		return dateToBeVerified;	
+	}
+	public static byte[] unzip(byte [] bytesToBeUnzipped) {
+		JcaPGPObjectFactory factory = new JcaPGPObjectFactory(bytesToBeUnzipped);
+		try {
+			Object object = factory.nextObject();
+			if (object instanceof PGPCompressedData) {
+				PGPCompressedData compressedData = (PGPCompressedData) object;
+				return compressedData.getDataStream().readAllBytes();
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (PGPException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return bytesToBeUnzipped;		
+	}
+	public static byte[] decrypt(byte[] bytesToBeDecrypted) {
+		return null;		
+	}
+	
+	public static byte[] convertFromRadix64ToByteStream(byte[] bytesToBeConvertedIntoRadix64){
+        InputStream inputData = new ByteArrayInputStream(bytesToBeConvertedIntoRadix64);
+		byte[] returnBytes;
+		try {
+			returnBytes = PGPUtil.getDecoderStream(inputData).readAllBytes();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+        return returnBytes;
+	}
+
+	public static boolean isEncryptedMessage(byte [] data) {
+		
+		JcaPGPObjectFactory factory = new JcaPGPObjectFactory(data);
+		try {
+			if (factory.nextObject() instanceof PGPEncryptedDataList) {
+				return true;
+			}
+			
+		} catch (IOException e) {
+		}
+		
+		return false;
+		
 	}
 
 }

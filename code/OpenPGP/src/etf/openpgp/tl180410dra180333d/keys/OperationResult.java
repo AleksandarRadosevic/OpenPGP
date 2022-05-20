@@ -13,4 +13,8 @@ public class OperationResult {
 		  KEY_EXISTS,
 		  FAILURE
 	}
+	
+	public enum READ_MESSAGE_OPERATION_RESULT {
+		 
+	}
 }

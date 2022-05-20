@@ -116,7 +116,7 @@ public class MessageSender {
 		});
 		
 		// autentication 
-		JLabel jlAutentication = new JLabel("Choose autentication key (Optional)");
+		JLabel jlAutentication = new JLabel("Choose autentication key");
 		jcomboAutenticationKeys = new JComboBox<>();
 		
 		sendMessageFormPanel.add(jlAutentication);
