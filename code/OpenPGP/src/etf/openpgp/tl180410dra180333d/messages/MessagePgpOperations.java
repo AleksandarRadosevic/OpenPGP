@@ -34,15 +34,18 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePublicKeyKeyEncryptionMethodG
 import etf.openpgp.tl180410dra180333d.keys.KeyUtils;
 
 /**
- * Klasa koja obezbedjuje operacije prilikom slanja i prijema poruke koristeci PGP protokol
+ * Klasa koja obezbedjuje operacije prilikom slanja i prijema poruke koristeci
+ * PGP protokol
  */
 public class MessagePgpOperations {
 
 	/**
 	 * Operacija koja potpicuje poruku(niz bajtova)
-	 * @param byte[] dataToBeSigned - poruka za potpisivanje
+	 * 
+	 * @param byte[]       dataToBeSigned - poruka za potpisivanje
 	 * @param PGPSecretKey signKey - privatni kljuc koji se koristi za potpisivanje
-	 * @param passphrase - lozinka za zastitu privatnog kljuca koji se koristi za potpisivanje
+	 * @param passphrase   - lozinka za zastitu privatnog kljuca koji se koristi za
+	 *                     potpisivanje
 	 * @return potpisana poruka(niz bajtova)
 	 * @throws PGPException
 	 * @throws IOException
@@ -86,75 +89,86 @@ public class MessagePgpOperations {
 
 	/**
 	 * Operacija za sifrovanje poruke( niza bajtova)
-	 * @param byte[] bytesToBeEncrypted - poruka za sifrovanje
+	 * 
+	 * @param byte[]       bytesToBeEncrypted - poruka za sifrovanje
 	 * @param PGPPublicKey encryptionKey - javni kljuc koji se koristi za sifrovanje
-	 * @param int symetricEncryptionAlgorithm - identifikator simetricnog algoritma koji se koristi pri sifrovanju
+	 * @param int          symetricEncryptionAlgorithm - identifikator simetricnog
+	 *                     algoritma koji se koristi pri sifrovanju
 	 * @return sifrovana poruka( niz bajtova)
 	 * @throws IOException
 	 * @throws PGPException
 	 */
-	public static byte[] encrypt(byte[] bytesToBeEncrypted, PGPPublicKey encryptionKey, int symetricEncryptionAlgorithm) throws IOException, PGPException {
+	public static byte[] encrypt(byte[] bytesToBeEncrypted, PGPPublicKey encryptionKey, int symetricEncryptionAlgorithm)
+			throws IOException, PGPException {
 		ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-		
+
 		PGPEncryptedDataGenerator pgpEncryptedDataGenerator = new PGPEncryptedDataGenerator(
 				new JcePGPDataEncryptorBuilder(symetricEncryptionAlgorithm).setWithIntegrityPacket(true)
-				.setSecureRandom(new SecureRandom()).setProvider("BC"));
-		
-		pgpEncryptedDataGenerator.addMethod(new JcePublicKeyKeyEncryptionMethodGenerator(encryptionKey)
-    			.setProvider("BC"));
-		
-        OutputStream encryptedOutputStream = pgpEncryptedDataGenerator.open(byteOutputStream, bytesToBeEncrypted.length);
-        encryptedOutputStream.write(bytesToBeEncrypted);
-        
-        encryptedOutputStream.close();
-        byteOutputStream.close();
-        
-        return byteOutputStream.toByteArray();
+						.setSecureRandom(new SecureRandom()).setProvider("BC"));
+
+		pgpEncryptedDataGenerator
+				.addMethod(new JcePublicKeyKeyEncryptionMethodGenerator(encryptionKey).setProvider("BC"));
+
+		OutputStream encryptedOutputStream = pgpEncryptedDataGenerator.open(byteOutputStream,
+				bytesToBeEncrypted.length);
+		encryptedOutputStream.write(bytesToBeEncrypted);
+
+		encryptedOutputStream.close();
+		byteOutputStream.close();
+
+		return byteOutputStream.toByteArray();
 	}
 
 	/**
 	 * Operacija za zipovanje poruke( niza bajtova)
-	 * @param byte[] bytesToBeZiped - niz bajtova za kompresiju(poruka pre kompresije)
+	 * 
+	 * @param byte[] bytesToBeZiped - niz bajtova za kompresiju(poruka pre
+	 *               kompresije)
 	 * @return kompresovana poruka( niz bajtova) u ZIP formatu
 	 * @throws IOException
 	 */
 	public static byte[] zip(byte[] bytesToBeZiped) throws IOException {
 		ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-		
-		PGPCompressedDataGenerator pgpCompressedDataGenerator = new PGPCompressedDataGenerator(PGPCompressedDataGenerator.ZIP);
-		
+
+		PGPCompressedDataGenerator pgpCompressedDataGenerator = new PGPCompressedDataGenerator(
+				PGPCompressedDataGenerator.ZIP);
+
 		OutputStream compressedOutputStream = pgpCompressedDataGenerator.open(byteOutputStream);
 		compressedOutputStream.write(bytesToBeZiped);
-		
+
 		compressedOutputStream.close();
 		byteOutputStream.close();
-		
+
 		return byteOutputStream.toByteArray();
 	}
-	
+
 	/**
 	 * Operacija za konverziju poruke( niza bajtova) u radix64 format
-	 * @param byte[] bytesToBeConvertedIntoRadix64 - niz bajtova za konverziju(poruka pre konverzije)
+	 * 
+	 * @param byte[] bytesToBeConvertedIntoRadix64 - niz bajtova za
+	 *               konverziju(poruka pre konverzije)
 	 * @return kkonvertovana poruka( niz bajtova) u radix64 format
 	 * @throws IOException
 	 */
-	public static byte[] convertToRadix64(byte[] bytesToBeConvertedIntoRadix64) throws IOException{
-        ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-        
-        ArmoredOutputStream radix64OutputStream = new ArmoredOutputStream(byteOutputStream);
-        
-        radix64OutputStream.write(bytesToBeConvertedIntoRadix64);
-        
-        radix64OutputStream.close();
-        byteOutputStream.close();
-        
-        return byteOutputStream.toByteArray();
+	public static byte[] convertToRadix64(byte[] bytesToBeConvertedIntoRadix64) throws IOException {
+		ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+
+		ArmoredOutputStream radix64OutputStream = new ArmoredOutputStream(byteOutputStream);
+
+		radix64OutputStream.write(bytesToBeConvertedIntoRadix64);
+
+		radix64OutputStream.close();
+		byteOutputStream.close();
+
+		return byteOutputStream.toByteArray();
 	}
 
+	
 	public static byte[] verifySign(byte[] dateToBeVerified) {
-		return dateToBeVerified;	
+		return dateToBeVerified;
 	}
-	public static byte[] unzip(byte [] bytesToBeUnzipped) {
+
+	public static byte[] unzip(byte[] bytesToBeUnzipped) {
 		JcaPGPObjectFactory factory = new JcaPGPObjectFactory(bytesToBeUnzipped);
 		try {
 			Object object = factory.nextObject();
@@ -169,37 +183,53 @@ public class MessagePgpOperations {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		return bytesToBeUnzipped;		
+
+		return bytesToBeUnzipped;
 	}
+
+	/**
+	 * metoda za dekriptovanje poruke
+	 * @param bytesToBeDecrypted - podaci koji se dekriptuju
+	 * @return dekriptovani podaci
+	 */
 	public static byte[] decrypt(byte[] bytesToBeDecrypted) {
-		return null;		
+		return null;
 	}
-	
-	public static byte[] convertFromRadix64ToByteStream(byte[] bytesToBeConvertedIntoRadix64){
-        InputStream inputData = new ByteArrayInputStream(bytesToBeConvertedIntoRadix64);
+
+	/**
+	 * metoda koja konvertuje podatke iz radix64 formata u 8-bitni binarni tok
+	 * @param bytesToBeConvertedIntoRadix64
+	 * @return konvertovani podaci
+	 */
+	public static byte[] convertFromRadix64ToByteStream(byte[] bytesToBeConvertedIntoRadix64) {
+		InputStream inputData = new ByteArrayInputStream(bytesToBeConvertedIntoRadix64);
 		byte[] returnBytes;
 		try {
 			returnBytes = PGPUtil.getDecoderStream(inputData).readAllBytes();
 		} catch (IOException e) {
 			return null;
 		}
-        return returnBytes;
+		return returnBytes;
 	}
+	
+	/**
+	 * metoda koja proverava da li je poruka enkriptovana
+	 * @param data - tok bajtova koji se ispituje
+	 * @return true/false
+	 */
+	public static boolean isEncryptedMessage(byte[] data) {
 
-	public static boolean isEncryptedMessage(byte [] data) {
-		
 		JcaPGPObjectFactory factory = new JcaPGPObjectFactory(data);
 		try {
 			if (factory.nextObject() instanceof PGPEncryptedDataList) {
 				return true;
 			}
-			
+
 		} catch (IOException e) {
 		}
-		
+
 		return false;
-		
+
 	}
 
 }

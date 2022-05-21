@@ -53,12 +53,23 @@ import etf.openpgp.tl180410dra180333d.Application;
 public class MessageReceiver {
 	private Application application = null;
 	private String author = null;
+	private int encryptionAlgorithm = 0;
 	private byte[] finalMessage = null;
-
+	private boolean radixUsed = false;
+	private boolean zipUsed = false;
+	
+	/**
+	 * funkcija koja kreira objekat za citanje poruke
+	 * @param application - aplikacija za koju pravimo gui za primanje poruke
+	 */
 	public MessageReceiver(Application application) {
 		this.application = application;
 	}
 
+	/**
+	 * metoda koja inicijalizuje panel za primanje poruke
+	 * @param receiverMessagePanel
+	 */
 	public void initializeApplicationPanel(JPanel receiverMessagePanel) {
 		receiverMessagePanel.setLayout(new BorderLayout());
 		// header
@@ -101,18 +112,22 @@ public class MessageReceiver {
 
 	}
 
+	/**
+	 * metoda koja cita kriptovanu poruku
+	 * @param file - fajl koji se cita
+	 */
 	public void readFile(File file) {
 		byte[] dataForReading = null;
 		try {
 			FileInputStream fileInputStream = new FileInputStream(file);
 			String str = file.toString();
-			str = str.substring(str.lastIndexOf('.'),str.length());
+			str = str.substring(str.lastIndexOf('.'), str.length());
 			if (!str.equals(".gpg")) {
 				JOptionPane.showMessageDialog(application, "Message is not in openPGP format!", "Decryption error",
 						JOptionPane.ERROR_MESSAGE);
-				return ;
+				return;
 			}
-			
+
 			dataForReading = fileInputStream.readAllBytes();
 			fileInputStream.close();
 		} catch (FileNotFoundException e) {
@@ -126,11 +141,17 @@ public class MessageReceiver {
 		}
 
 		// convert from radix64 to byte stream data
+		byte [] tempData = dataForReading;
 		dataForReading = MessagePgpOperations.convertFromRadix64ToByteStream(dataForReading);
 		if (dataForReading == null) {
-			JOptionPane.showMessageDialog(application, "Message is not in correct format or someone has changed encrypted message!", "Decryption error",
+			JOptionPane.showMessageDialog(application,
+					"Message is not in correct format or someone has changed encrypted message!", "Decryption error",
 					JOptionPane.ERROR_MESSAGE);
-			return ;
+			return;
+		}
+		
+		if (tempData.length>dataForReading.length) {
+			this.radixUsed = true;
 		}
 		// radix64 finished
 		// decryption
@@ -153,12 +174,12 @@ public class MessageReceiver {
 				long keyId = encryptedData.getKeyID();
 				PGPSecretKeyRing secretKeyRing = application.getKeyUtils().getPgpPrivateKeyRingById(keyId);
 				PGPSecretKey pgpSecretKey = secretKeyRing.getSecretKey(keyId);
-
 				PGPPrivateKey privateKey = pgpSecretKey.extractPrivateKey(
 						new JcePBESecretKeyDecryptorBuilder().setProvider("BC").build(passphrase.toCharArray()));
 
 				PublicKeyDataDecryptorFactory decryptorFactory = new JcePublicKeyDataDecryptorFactoryBuilder()
 						.setProvider("BC").build(privateKey);
+				encryptionAlgorithm = encryptedData.getSymmetricAlgorithm(decryptorFactory);
 
 				dataForReading = encryptedData.getDataStream(decryptorFactory).readAllBytes();
 			} catch (IOException e) {
@@ -173,11 +194,13 @@ public class MessageReceiver {
 			}
 			// decryption finished
 		}
-		
+
 		// unzip start
-		
+		tempData = dataForReading;
 		dataForReading = MessagePgpOperations.unzip(dataForReading);
-		
+		if (!dataForReading.equals(tempData)) {
+			this.zipUsed = true;
+		}
 		// unzip end
 
 		// verify sign start
@@ -189,7 +212,7 @@ public class MessageReceiver {
 				PGPOnePassSignature signatureToVerify = signatureList.get(0);
 				long signatureKeyId = signatureToVerify.getKeyID();
 				PGPPublicKeyRing publicKeyRing = this.application.getKeyUtils().getPgpPublicKeyRingById(signatureKeyId);
-				if (publicKeyRing == null) 
+				if (publicKeyRing == null)
 					throw new NullPointerException();
 				PGPPublicKey key = publicKeyRing.getPublicKey(signatureKeyId);
 				StringBuilder stringBuilder = new StringBuilder();
@@ -200,8 +223,8 @@ public class MessageReceiver {
 				this.author = new String(stringBuilder);
 				JcaPGPObjectFactory factory = new JcaPGPObjectFactory(dataForReading);
 				factory.nextObject();
-				PGPLiteralData literalData = (PGPLiteralData) factory.nextObject();
-				this.finalMessage = literalData.getInputStream().readAllBytes();
+				PGPLiteralData data = (PGPLiteralData) factory.nextObject();
+				this.finalMessage = data.getInputStream().readAllBytes();
 				showInfo();
 				saveMessage(file);
 			}
@@ -212,14 +235,13 @@ public class MessageReceiver {
 		} catch (PGPException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		catch(NullPointerException e ) {
+		} catch (NullPointerException e) {
 			JOptionPane.showMessageDialog(application, "You don't have secret key to verify signature!",
 					"Decryption error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		// verify sign end
-		
+
 	}
 
 	private void saveMessage(File file) {
@@ -276,10 +298,12 @@ public class MessageReceiver {
 		int left = 10;
 		int bottom = 5;
 		int right = 10;
+		// add header
 		c.insets = new Insets(top, left, bottom, right);
 		JLabel lblHeader = new JLabel("Message Received");
 		jPanelInfo.add(lblHeader, c);
 
+		// add author
 		c.gridwidth = 1;
 		c.gridy = 1;
 		JLabel jlblText = new JLabel("Author:");
@@ -289,12 +313,69 @@ public class MessageReceiver {
 		JLabel jlblAuthor = new JLabel(author);
 		jPanelInfo.add(jlblAuthor, c);
 
+		
+		// add symmetric algorithm used
+		c.gridy = 2;
+		c.gridx = 0;
+		JLabel jlblAlgorithmText = new JLabel("Symmetric algorithm used:");
+		jPanelInfo.add(jlblAlgorithmText, c);
+
+		c.gridx = 1;
+		JLabel jlblAlgorithm = null;
+		if (encryptionAlgorithm == 2)
+			jlblAlgorithm = new JLabel("3DES");
+		else if (encryptionAlgorithm == 7)
+			jlblAlgorithm = new JLabel("AES 128");
+		else {
+			jlblAlgorithm = new JLabel("/");
+		}
+		jPanelInfo.add(jlblAlgorithm, c);
+
+		
+		// add radix64 info
+		c.gridy = 3;
+		c.gridx = 0;
+		JLabel jlblRadix64Text = new JLabel("Radix64 used:");
+		jPanelInfo.add(jlblRadix64Text, c);
+
+		c.gridx = 1;
+		JLabel jlblRadix64 = null;
+		if (this.radixUsed)
+			jlblRadix64 = new JLabel("yes");
+		else 
+			jlblRadix64 = new JLabel("no");
+		
+		jPanelInfo.add(jlblRadix64, c);
+
+		
+		// add zip info
+		c.gridy = 4;
+		c.gridx = 0;
+		JLabel jlblZipText = new JLabel("Zip used:");
+		jPanelInfo.add(jlblZipText, c);
+
+		c.gridx = 1;
+		JLabel jlblZip = null;
+		if (this.zipUsed)
+			jlblZip = new JLabel("yes");
+		else 
+			jlblZip = new JLabel("no");
+		
+		jPanelInfo.add(jlblZip, c);
+		
+		
+		
+		
 		JOptionPane.showConfirmDialog(this.application, jPanelInfo, "Message info: ", JOptionPane.OK_CANCEL_OPTION,
 				JOptionPane.PLAIN_MESSAGE);
 
 		// return old color
 		UI.put("OptionPane.background", defaultColor);
 		UI.put("Panel.background", defaultColor);
+		
+		this.radixUsed = false;
+		this.zipUsed = false;
+		
 	}
 
 }
