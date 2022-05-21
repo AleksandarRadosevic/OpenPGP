@@ -18,6 +18,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Iterator;
 
 import javax.swing.BorderFactory;
@@ -228,10 +229,16 @@ public class MessageReceiver {
 				showInfo();
 				saveMessage(file);
 			}
+			else {
+				this.finalMessage = dataForReading;
+				showInfo();
+				saveMessage(file);
+			}
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			this.finalMessage = dataForReading;
+			showInfo();
+			saveMessage(file);
 		} catch (PGPException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -375,6 +382,8 @@ public class MessageReceiver {
 		
 		this.radixUsed = false;
 		this.zipUsed = false;
+		this.author = null;
+		this.encryptionAlgorithm = 0;
 		
 	}
 

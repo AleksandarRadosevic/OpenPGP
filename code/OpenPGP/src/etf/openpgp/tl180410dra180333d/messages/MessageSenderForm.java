@@ -74,6 +74,7 @@ public class MessageSenderForm {
 	 */
 	public void setAuthenticationKey(String authenticationKeySelected) {
 		if((authenticationKeySelected==null)||authenticationKeySelected.length()==0) {
+			this.signKey = null;
 			return;
 		}
 		String[] authenticationKeySelectedParts = authenticationKeySelected.split(" ");
