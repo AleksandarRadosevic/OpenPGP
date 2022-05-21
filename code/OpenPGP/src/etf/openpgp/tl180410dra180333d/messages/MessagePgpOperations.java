@@ -182,8 +182,6 @@ public class MessagePgpOperations {
 		try {
 			returnBytes = PGPUtil.getDecoderStream(inputData).readAllBytes();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 			return null;
 		}
         return returnBytes;

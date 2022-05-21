@@ -2,6 +2,7 @@ package etf.openpgp.tl180410dra180333d.messages;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -104,7 +105,16 @@ public class MessageReceiver {
 		byte[] dataForReading = null;
 		try {
 			FileInputStream fileInputStream = new FileInputStream(file);
+			String str = file.toString();
+			str = str.substring(str.lastIndexOf('.'),str.length());
+			if (!str.equals(".gpg")) {
+				JOptionPane.showMessageDialog(application, "Message is not in openPGP format!", "Decryption error",
+						JOptionPane.ERROR_MESSAGE);
+				return ;
+			}
+			
 			dataForReading = fileInputStream.readAllBytes();
+			fileInputStream.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -118,8 +128,9 @@ public class MessageReceiver {
 		// convert from radix64 to byte stream data
 		dataForReading = MessagePgpOperations.convertFromRadix64ToByteStream(dataForReading);
 		if (dataForReading == null) {
-			JOptionPane.showMessageDialog(application, "Message is not in correct format!", "Decryption error",
+			JOptionPane.showMessageDialog(application, "Message is not in correct format or someone has changed encrypted message!", "Decryption error",
 					JOptionPane.ERROR_MESSAGE);
+			return ;
 		}
 		// radix64 finished
 		// decryption
@@ -153,20 +164,20 @@ public class MessageReceiver {
 			} catch (IOException e) {
 				JOptionPane.showMessageDialog(application, "You don't have secret key to decrypt message!",
 						"Decryption error", JOptionPane.ERROR_MESSAGE);
-				//e.printStackTrace();
-				return ;
+				return;
 			} catch (PGPException e) {
 				// secret key doesn't exists!
 				JOptionPane.showMessageDialog(application, "You don't have secret key to decrypt message!",
 						"Decryption error", JOptionPane.ERROR_MESSAGE);
-				//e.printStackTrace();
-				return ;
+				return;
 			}
 			// decryption finished
 		}
+		
 		// unzip start
-		byte[] val = dataForReading;
+		
 		dataForReading = MessagePgpOperations.unzip(dataForReading);
+		
 		// unzip end
 
 		// verify sign start
@@ -178,9 +189,11 @@ public class MessageReceiver {
 				PGPOnePassSignature signatureToVerify = signatureList.get(0);
 				long signatureKeyId = signatureToVerify.getKeyID();
 				PGPPublicKeyRing publicKeyRing = this.application.getKeyUtils().getPgpPublicKeyRingById(signatureKeyId);
+				if (publicKeyRing == null) 
+					throw new NullPointerException();
 				PGPPublicKey key = publicKeyRing.getPublicKey(signatureKeyId);
 				StringBuilder stringBuilder = new StringBuilder();
-				for (Iterator iterator = key.getUserIDs(); iterator.hasNext();) {
+				for (Iterator<String> iterator = key.getUserIDs(); iterator.hasNext();) {
 					String str = (String) iterator.next();
 					stringBuilder.append(str);
 				}
@@ -200,8 +213,13 @@ public class MessageReceiver {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		catch(NullPointerException e ) {
+			JOptionPane.showMessageDialog(application, "You don't have secret key to verify signature!",
+					"Decryption error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 		// verify sign end
-
+		
 	}
 
 	private void saveMessage(File file) {
@@ -225,6 +243,12 @@ public class MessageReceiver {
 			outputStream.write(finalMessage);
 			JOptionPane.showMessageDialog(this.application, "Message Successfully saved", "Success",
 					JOptionPane.INFORMATION_MESSAGE);
+			// open file
+			Desktop desktop = null;
+			if (Desktop.isDesktopSupported()) {
+				desktop = Desktop.getDesktop();
+			}
+			desktop.open(new File(path.toString() + "\\" + nameAndExtension));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

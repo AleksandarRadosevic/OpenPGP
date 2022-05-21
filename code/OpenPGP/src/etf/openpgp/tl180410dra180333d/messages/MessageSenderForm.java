@@ -200,6 +200,7 @@ public class MessageSenderForm {
 		byte[] originalMessage = null;
 		try {
 			originalMessage = Files.readAllBytes(this.sourceFile.toPath());
+			
 		} catch (Exception e) {
 			return "Source file can not be read!";
 		}
