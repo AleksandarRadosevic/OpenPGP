@@ -163,11 +163,12 @@ public class MessagePgpOperations {
 		return byteOutputStream.toByteArray();
 	}
 
-	
-	public static byte[] verifySign(byte[] dateToBeVerified) {
-		return dateToBeVerified;
-	}
-
+	/**
+	 * metoda koja vrsi dekompresiju poruke
+	 * 
+	 * @param bytesToBeUnzipped
+	 * @return dekompresovana poruka
+	 */
 	public static byte[] unzip(byte[] bytesToBeUnzipped) {
 		JcaPGPObjectFactory factory = new JcaPGPObjectFactory(bytesToBeUnzipped);
 		try {
@@ -178,10 +179,10 @@ public class MessagePgpOperations {
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			//e.printStackTrace();
+			// e.printStackTrace();
 		} catch (PGPException e) {
 			// TODO Auto-generated catch block
-			//e.printStackTrace();
+			// e.printStackTrace();
 		}
 
 		return bytesToBeUnzipped;
@@ -189,6 +190,7 @@ public class MessagePgpOperations {
 
 	/**
 	 * metoda za dekriptovanje poruke
+	 * 
 	 * @param bytesToBeDecrypted - podaci koji se dekriptuju
 	 * @return dekriptovani podaci
 	 */
@@ -198,6 +200,7 @@ public class MessagePgpOperations {
 
 	/**
 	 * metoda koja konvertuje podatke iz radix64 formata u 8-bitni binarni tok
+	 * 
 	 * @param bytesToBeConvertedIntoRadix64
 	 * @return konvertovani podaci
 	 */
@@ -211,9 +214,10 @@ public class MessagePgpOperations {
 		}
 		return returnBytes;
 	}
-	
+
 	/**
 	 * metoda koja proverava da li je poruka enkriptovana
+	 * 
 	 * @param data - tok bajtova koji se ispituje
 	 * @return true/false
 	 */
