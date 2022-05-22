@@ -94,11 +94,12 @@ public class MessagePgpOperations {
 	 * @param PGPPublicKey encryptionKey - javni kljuc koji se koristi za sifrovanje
 	 * @param int          symetricEncryptionAlgorithm - identifikator simetricnog
 	 *                     algoritma koji se koristi pri sifrovanju
+	 * @param boolean bytesInPgpLiteralDataFormat - da li je poruka vec u PGP formatu
 	 * @return sifrovana poruka( niz bajtova)
 	 * @throws IOException
 	 * @throws PGPException
 	 */
-	public static byte[] encrypt(byte[] bytesToBeEncrypted, PGPPublicKey encryptionKey, int symetricEncryptionAlgorithm)
+	public static byte[] encrypt(byte[] bytesToBeEncrypted, PGPPublicKey encryptionKey, int symetricEncryptionAlgorithm, boolean bytesInPgpLiteralDataFormat)
 			throws IOException, PGPException {
 		ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
 
@@ -110,8 +111,24 @@ public class MessagePgpOperations {
 				.addMethod(new JcePublicKeyKeyEncryptionMethodGenerator(encryptionKey).setProvider("BC"));
 
 		OutputStream encryptedOutputStream = pgpEncryptedDataGenerator.open(byteOutputStream,
-				bytesToBeEncrypted.length);
-		encryptedOutputStream.write(bytesToBeEncrypted);
+				new byte[1<<16]);
+		
+		if(bytesInPgpLiteralDataFormat) {
+			encryptedOutputStream.write(bytesToBeEncrypted);
+		}
+		else {
+	        PGPLiteralDataGenerator pgpLiteralDataGenerator = new PGPLiteralDataGenerator();
+	        
+	        OutputStream pgpLiteralDataGeneratorOutputStream = pgpLiteralDataGenerator.open(
+	        		encryptedOutputStream, PGPLiteralData.BINARY,
+	                PGPLiteralData.CONSOLE, bytesToBeEncrypted.length, new Date());
+	        
+	        pgpLiteralDataGeneratorOutputStream.write(bytesToBeEncrypted);
+	        
+	        pgpLiteralDataGeneratorOutputStream.close();
+		}
+		
+		
 
 		encryptedOutputStream.close();
 		byteOutputStream.close();
@@ -124,17 +141,30 @@ public class MessagePgpOperations {
 	 * 
 	 * @param byte[] bytesToBeZiped - niz bajtova za kompresiju(poruka pre
 	 *               kompresije)
+	 * @param boolean bytesInPgpLiteralDataFormat - da li je poruka vec u PGP formatu
 	 * @return kompresovana poruka( niz bajtova) u ZIP formatu
 	 * @throws IOException
 	 */
-	public static byte[] zip(byte[] bytesToBeZiped) throws IOException {
+	public static byte[] zip(byte[] bytesToBeZiped, boolean bytesInPgpLiteralDataFormat) throws IOException {
 		ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
 
 		PGPCompressedDataGenerator pgpCompressedDataGenerator = new PGPCompressedDataGenerator(
 				PGPCompressedDataGenerator.ZIP);
 
 		OutputStream compressedOutputStream = pgpCompressedDataGenerator.open(byteOutputStream);
-		compressedOutputStream.write(bytesToBeZiped);
+		
+		if(bytesInPgpLiteralDataFormat) {
+			compressedOutputStream.write(bytesToBeZiped);
+		}
+		else {
+	        PGPLiteralDataGenerator pgpLiteralDataGenerator = new PGPLiteralDataGenerator();
+	        OutputStream pgpLiteralDataGeneratorOutputStream = pgpLiteralDataGenerator.open(
+	        		compressedOutputStream, PGPLiteralData.BINARY,
+	                PGPLiteralData.CONSOLE, bytesToBeZiped.length, new Date());
+	        
+	        pgpLiteralDataGeneratorOutputStream.write(bytesToBeZiped);
+	        pgpLiteralDataGeneratorOutputStream.close();
+		}
 
 		compressedOutputStream.close();
 		byteOutputStream.close();
@@ -147,7 +177,7 @@ public class MessagePgpOperations {
 	 * 
 	 * @param byte[] bytesToBeConvertedIntoRadix64 - niz bajtova za
 	 *               konverziju(poruka pre konverzije)
-	 * @return kkonvertovana poruka( niz bajtova) u radix64 format
+	 * @return konvertovana poruka( niz bajtova) u radix64 format
 	 * @throws IOException
 	 */
 	public static byte[] convertToRadix64(byte[] bytesToBeConvertedIntoRadix64) throws IOException {

@@ -222,22 +222,27 @@ public class MessageSenderForm {
 			String sentMessageName = "S" + String.valueOf(iteration)+"_"+(new Date().getTime())+"_"+sourceFile.getName() + ".gpg";
 			try (FileOutputStream fileOutputStream = new FileOutputStream(
 					this.destinationPath + "\\" + sentMessageName)) {
-
+				
+				boolean pgpLiteralDataFormat = false;
+				
 				// message should be authenticated - signed if signKey is selected
 				if (this.signKey != null) {
 					message = MessagePgpOperations.sign(message, this.signKey, this.passphrase);
+					pgpLiteralDataFormat = true;
 				}
 				
 				// zip compression
 				if(this.zip) {
-					message = MessagePgpOperations.zip(message);
+					message = MessagePgpOperations.zip(message, pgpLiteralDataFormat);
+					pgpLiteralDataFormat = true;
 				}
 
 				// message should be encrypted if encryption key for session key encryption is
 				// selected
 				if (iterationPublicKeyForSessionKeyEncryption != null) {
 					message = MessagePgpOperations.encrypt(message, iterationPublicKeyForSessionKeyEncryption,
-							MessageSenderForm.getSymetricAlgorithmIntValue(this.symmetricKeyAlgorithm));
+							MessageSenderForm.getSymetricAlgorithmIntValue(this.symmetricKeyAlgorithm), pgpLiteralDataFormat);
+					pgpLiteralDataFormat = true;
 				}
 				
 				if(this.radix64) {
