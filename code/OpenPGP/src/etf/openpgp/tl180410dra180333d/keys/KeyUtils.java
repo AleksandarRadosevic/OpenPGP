@@ -16,6 +16,7 @@ import java.security.NoSuchProviderException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -273,14 +274,36 @@ public class KeyUtils {
 	 */
 	public boolean exportPrivateKeyRing(long keyId, String userId, String selectedExportPath) {
 		PGPSecretKeyRing secretKeyRing;
+		boolean onlyPublic = false;
+		
+		// check if user want to export only a public keys from private key ring
+		String[] exportPrivateKeyRingOptions = {"privatni + javni kljucevi", "samo javni"};
+
+		Object selected = JOptionPane.showInputDialog(this.application, "Izaberite jednu od sledecih opcija za izvoz para (potpis, enkripcija) kljuceva:", "Selection", JOptionPane.DEFAULT_OPTION, null, exportPrivateKeyRingOptions, "0");
+		if ( selected != null ){//null if the user cancels. 
+		    String selectedString = selected.toString();
+		    if(selectedString.equals(exportPrivateKeyRingOptions[1])) {
+		    	onlyPublic = true;
+		    }
+		}else{
+		    return false;
+		}
+		
 		try {
 			secretKeyRing = this.privateKeyRingCollection.getSecretKeyRing(keyId);
+			
 			String pathToSave = null;
 			if(selectedExportPath!=null && selectedExportPath.length()>0) {
-				pathToSave = selectedExportPath + "\\Private_"+userId+"_";
+				pathToSave = selectedExportPath+"\\";
 			}
 			else {
-				pathToSave = Application.packageRootPath + "/data/private_key_exported/Private_"+userId+"_";
+				pathToSave = Application.packageRootPath + "/data/private_key_exported/";
+			}
+			if(onlyPublic) {
+				pathToSave += "Public_"+userId+"_";
+			}
+			else {
+				pathToSave += "Private_"+userId+"_";
 			}
 			pathToSave = pathToSave + (new Date()).getTime()+ ".asc";
 			File fileToSave = new File(pathToSave);
@@ -293,7 +316,13 @@ public class KeyUtils {
 				return false;
 			}
 			try (OutputStream securedOutputStream = new ArmoredOutputStream(new FileOutputStream(fileToSave))) {
-				secretKeyRing.encode(securedOutputStream);
+				if(onlyPublic) {
+					PGPPublicKeyRing publicKeyRing = KeyUtils.convertFromPGPPrivateToPublicKeyRing(secretKeyRing);
+					publicKeyRing.encode(securedOutputStream);
+				}
+				else {
+					secretKeyRing.encode(securedOutputStream);
+				}
 				return true;
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -514,6 +543,17 @@ public class KeyUtils {
 			return HashAlgorithmTags.SHA256;
 		}
 		return HashAlgorithmTags.SHA1;
+	}
+	
+	public static PGPPublicKeyRing convertFromPGPPrivateToPublicKeyRing(PGPSecretKeyRing privateKeyRing) {
+		List<PGPPublicKey> publicKeyList = new LinkedList<>();
+		Iterator<PGPPublicKey> iteratorPublicKeysInPrivateRing = privateKeyRing.getPublicKeys();
+	    while (iteratorPublicKeysInPrivateRing.hasNext()) {
+	        PGPPublicKey pub = iteratorPublicKeysInPrivateRing.next();
+	        publicKeyList.add(pub);
+	    }
+	    PGPPublicKeyRing publicKeyRing = new PGPPublicKeyRing(publicKeyList);
+	    return publicKeyRing;
 	}
 
 }
