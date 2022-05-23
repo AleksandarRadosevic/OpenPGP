@@ -126,6 +126,7 @@ public class MessageReceiver {
 			if (!str.equals(".gpg")) {
 				JOptionPane.showMessageDialog(application, "Message is not in openPGP format!", "Decryption error",
 						JOptionPane.ERROR_MESSAGE);
+				fileInputStream.close();
 				return;
 			}
 
@@ -195,6 +196,8 @@ public class MessageReceiver {
 			}
 			// decryption finished
 		}
+		
+		dataForReading = MessageReceiver.removePGPLiteralDataIfExists(dataForReading);
 
 		// unzip start
 		tempData = dataForReading;
@@ -203,6 +206,8 @@ public class MessageReceiver {
 			this.zipUsed = true;
 		}
 		// unzip end
+		
+		dataForReading = MessageReceiver.removePGPLiteralDataIfExists(dataForReading);
 
 		// verify sign start
 
@@ -385,6 +390,19 @@ public class MessageReceiver {
 		this.author = null;
 		this.encryptionAlgorithm = 0;
 		
+	}
+	
+	private static byte[] removePGPLiteralDataIfExists(byte[] data) {
+		try {
+			JcaPGPObjectFactory factory = new JcaPGPObjectFactory(data);
+			Object object = factory.nextObject();
+			if(object instanceof PGPLiteralData) {
+				PGPLiteralData pgpLiteralData = (PGPLiteralData)object;
+				return pgpLiteralData.getInputStream().readAllBytes();
+			}
+			
+		} catch (IOException e) {}
+		return data;
 	}
 
 }
