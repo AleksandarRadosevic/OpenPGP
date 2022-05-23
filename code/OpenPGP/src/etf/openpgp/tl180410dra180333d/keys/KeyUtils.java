@@ -277,7 +277,7 @@ public class KeyUtils {
 		boolean onlyPublic = false;
 		
 		// check if user want to export only a public keys from private key ring
-		String[] exportPrivateKeyRingOptions = {"private", "public"};
+		String[] exportPrivateKeyRingOptions = {"private + public", "public"};
 
 		Object selected = JOptionPane.showInputDialog(this.application, "Choose option for exporting key ring:", "Selection", JOptionPane.DEFAULT_OPTION, null, exportPrivateKeyRingOptions, "0");
 		if (selected != null ){//null if the user cancels. 
