@@ -57,7 +57,7 @@ import etf.openpgp.tl180410dra180333d.messages.MessageSender;
  * 
  */
 public class Application extends JFrame {
-	
+
 	public static final String packageRootPath = "./src/etf/openpgp/tl180410dra180333d/";
 	public static final String dataRootPath = Application.packageRootPath + "/data";
 
@@ -65,15 +65,12 @@ public class Application extends JFrame {
 	public static final String[] asymmetricSignAlgorithms = { "DSA 1024", "DSA 2048" };
 	public static final String[] symmetricAlgorithms = { "3DES", "AES 128" };
 
-	
-	
 	private DefaultTableModel privateKeyRingTableModel = null;
 	private DefaultTableModel publicKeyRingTableModel = null;
 	private KeyUtils keyUtils = null;
 	private MessageSender messageSender = null;
 	private MessageReceiver messageReceiver = null;
-	
-	
+
 	private static enum INITIALIZE_TABLE {
 		PRIVATE_RING_TABLE, PUBLIC_RING_TABLE
 	}
@@ -90,11 +87,11 @@ public class Application extends JFrame {
 
 		this.messageSender = new MessageSender(this);
 		this.messageReceiver = new MessageReceiver(this);
-		
+
 		this.initialization();
 
 		this.keyUtils = new KeyUtils(this);
-		
+
 		this.setVisible(true);
 
 		// when user close program on X
@@ -288,10 +285,10 @@ public class Application extends JFrame {
 
 					String keyIdStr = (String) keyRingTableModel.getValueAt(jtKeyRingTable.getSelectedRow(), 2);
 					String userId = (String) keyRingTableModel.getValueAt(jtKeyRingTable.getSelectedRow(), 1);
-					userId = userId.split("<")[0].replace(' ','_');				
-					userId = userId.substring(0,userId.length()-1);
+					userId = userId.split("<")[0].replace(' ', '_');
+					userId = userId.substring(0, userId.length() - 1);
 					long keyId = new BigInteger(keyIdStr, 16).longValue();
-					exportKeyRing(keyId,userId, ringType, selectedExportPath);
+					exportKeyRing(keyId, userId, ringType, selectedExportPath);
 				}
 			}
 		});
@@ -356,8 +353,8 @@ public class Application extends JFrame {
 				boolean ret = insertNewPrivateKeyRing(name, email, signAlgorithm, encryptionAlgorithm);
 				if (!ret) {
 					JOptionPane.showMessageDialog(Application.this,
-							"All fields are required and passphrase must be correct!",
-							"Key generation error", JOptionPane.ERROR_MESSAGE);
+							"All fields are required and passphrase must be correct!", "Key generation error",
+							JOptionPane.ERROR_MESSAGE);
 				}
 			}
 		});
@@ -434,14 +431,16 @@ public class Application extends JFrame {
 				passphrase);
 
 	}
-	
+
 	/**
-	 * Metoda za osvezavanje prikaza kljuceva kada se kolekcija privatnih kljuceva promeni
+	 * Metoda za osvezavanje prikaza kljuceva kada se kolekcija privatnih kljuceva
+	 * promeni
+	 * 
 	 * @param PGPSecretKeyRingCollection privateKeyRingCollection
 	 */
 	public void update_privateKeyRingTableModel(PGPSecretKeyRingCollection privateKeyRingCollection) {
 		this.privateKeyRingTableModel.setRowCount(0); // clear table model
-		
+
 		DefaultComboBoxModel<String> authenticationKeyListModel = new DefaultComboBoxModel<>();
 		authenticationKeyListModel.addElement(null);
 		Iterator<PGPSecretKeyRing> privateKeyRingIterator = privateKeyRingCollection.getKeyRings();
@@ -476,20 +475,22 @@ public class Application extends JFrame {
 					String.format("%016x", singnKeyId).toUpperCase() };
 
 			this.privateKeyRingTableModel.addRow(privateKeyRingTableRow);
-			authenticationKeyListModel.addElement(keyOwner+" "+String.format("%016x", singnKeyId).toUpperCase());
+			authenticationKeyListModel.addElement(keyOwner + " " + String.format("%016x", singnKeyId).toUpperCase());
 		}
 		this.messageSender.getJcomboAutenticationKeys().setModel(authenticationKeyListModel);
 	}
 
 	/**
-	 * Metoda za osvezavanje prikaza kljuceva kada se kolekcija javnih kljuceva promeni
+	 * Metoda za osvezavanje prikaza kljuceva kada se kolekcija javnih kljuceva
+	 * promeni
+	 * 
 	 * @param PGPPublicKeyRingCollection publicKeyRingCollection
 	 */
 	public void update_publicKeyRingTableModel(PGPPublicKeyRingCollection publicKeyRingCollection) {
 		this.publicKeyRingTableModel.setRowCount(0); // clear table model
 
-		DefaultListModel<String>encryptionKeyListModel = new DefaultListModel<>();
-		
+		DefaultListModel<String> encryptionKeyListModel = new DefaultListModel<>();
+
 		Iterator<PGPPublicKeyRing> publicKeyRingIterator = publicKeyRingCollection.getKeyRings();
 
 		while (publicKeyRingIterator.hasNext()) {
@@ -522,10 +523,10 @@ public class Application extends JFrame {
 					String.format("%016x", singnKeyId).toUpperCase() };
 
 			this.publicKeyRingTableModel.addRow(publicKeyRingTableRow);
-			encryptionKeyListModel.addElement(keyOwner+" "+String.format("%016x", singnKeyId).toUpperCase());
+			encryptionKeyListModel.addElement(keyOwner + " " + String.format("%016x", singnKeyId).toUpperCase());
 		}
 		this.messageSender.getJlistEncryptionKeys().setModel(encryptionKeyListModel);
-		
+
 	}
 
 	// key ring operations
@@ -553,12 +554,12 @@ public class Application extends JFrame {
 		}
 	}
 
-	private void exportKeyRing(long keyId,String userId, KEY_RING_TYPE expecting_ring, String selectedExportPath) {
+	private void exportKeyRing(long keyId, String userId, KEY_RING_TYPE expecting_ring, String selectedExportPath) {
 		boolean ret;
 		if (expecting_ring == KEY_RING_TYPE.PRIVATE_KEY_RING) {
-			ret = keyUtils.exportPrivateKeyRing(keyId,userId, selectedExportPath);
+			ret = keyUtils.exportPrivateKeyRing(keyId, userId, selectedExportPath);
 		} else {
-			ret = keyUtils.exportPublicKeyRing(keyId,userId, selectedExportPath);
+			ret = keyUtils.exportPublicKeyRing(keyId, userId, selectedExportPath);
 		}
 		if (!ret) {
 			JOptionPane.showMessageDialog(this, "Exporting key is not successful!", "Export error",
@@ -598,6 +599,9 @@ public class Application extends JFrame {
 						JOptionPane.showMessageDialog(this, "Key Ring already exists in table!", "Duplicate error",
 								JOptionPane.ERROR_MESSAGE);
 						return;
+					} else {
+						JOptionPane.showMessageDialog(this, "Bad key ring format!", "Format error",
+								JOptionPane.ERROR_MESSAGE);
 					}
 				} else {
 					JOptionPane.showMessageDialog(this, "File extension must be asc!", "Extension error",
@@ -624,7 +628,7 @@ public class Application extends JFrame {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * 
 	 * @return referenca na objekat klase koja upravlja kljucevima
@@ -635,7 +639,5 @@ public class Application extends JFrame {
 
 	public static void main(String[] args) {
 		Application app = new Application();
-		//3des 2
-		//aes 128 7
 	}
 }

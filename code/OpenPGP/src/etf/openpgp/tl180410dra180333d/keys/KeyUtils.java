@@ -277,10 +277,10 @@ public class KeyUtils {
 		boolean onlyPublic = false;
 		
 		// check if user want to export only a public keys from private key ring
-		String[] exportPrivateKeyRingOptions = {"privatni + javni kljucevi", "samo javni"};
+		String[] exportPrivateKeyRingOptions = {"private", "public"};
 
-		Object selected = JOptionPane.showInputDialog(this.application, "Izaberite jednu od sledecih opcija za izvoz para (potpis, enkripcija) kljuceva:", "Selection", JOptionPane.DEFAULT_OPTION, null, exportPrivateKeyRingOptions, "0");
-		if ( selected != null ){//null if the user cancels. 
+		Object selected = JOptionPane.showInputDialog(this.application, "Choose option for exporting key ring:", "Selection", JOptionPane.DEFAULT_OPTION, null, exportPrivateKeyRingOptions, "0");
+		if (selected != null ){//null if the user cancels. 
 		    String selectedString = selected.toString();
 		    if(selectedString.equals(exportPrivateKeyRingOptions[1])) {
 		    	onlyPublic = true;
@@ -356,7 +356,8 @@ public class KeyUtils {
 			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			
 		} catch (PGPException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -408,7 +409,7 @@ public class KeyUtils {
 			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return IMPORT_OPERATION_RESULT.FAILURE;
 	}

@@ -219,16 +219,6 @@ public class MessagePgpOperations {
 	}
 
 	/**
-	 * metoda za dekriptovanje poruke
-	 * 
-	 * @param bytesToBeDecrypted - podaci koji se dekriptuju
-	 * @return dekriptovani podaci
-	 */
-	public static byte[] decrypt(byte[] bytesToBeDecrypted) {
-		return null;
-	}
-
-	/**
 	 * metoda koja konvertuje podatke iz radix64 formata u 8-bitni binarni tok
 	 * 
 	 * @param bytesToBeConvertedIntoRadix64

@@ -27,6 +27,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
@@ -312,17 +313,20 @@ public class MessageReceiver {
 		int right = 10;
 		// add header
 		c.insets = new Insets(top, left, bottom, right);
-		JLabel lblHeader = new JLabel("Message Received");
+		JLabel lblHeader = new JLabel("Message Received",SwingConstants.CENTER);
 		jPanelInfo.add(lblHeader, c);
 
 		// add author
 		c.gridwidth = 1;
+		c.gridx = 0;
 		c.gridy = 1;
 		JLabel jlblText = new JLabel("Author:");
 		jPanelInfo.add(jlblText, c);
 
 		c.gridx = 1;
 		JLabel jlblAuthor = new JLabel(author);
+		if (author== null || author.length()==0)
+			jlblAuthor.setText("unknown author");
 		jPanelInfo.add(jlblAuthor, c);
 
 		
