@@ -52,6 +52,10 @@ import org.bouncycastle.util.Bytes;
 
 import etf.openpgp.tl180410dra180333d.Application;
 
+/**
+ * Klasa koja upravlja PGP procesom prijema poruke, kao i GUI-jem koji omogucava korisniku prijem poruke
+ *
+ */
 public class MessageReceiver {
 	private Application application = null;
 	private String author = null;

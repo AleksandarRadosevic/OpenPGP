@@ -26,7 +26,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import etf.openpgp.tl180410dra180333d.Application;
 
 /**
- * Klasa koja upravlja PRP procesom slanja poruke koristeci operacije koje pruza MessagePgpOperation klasa
+ * Klasa koja upravlja PGP procesom slanja poruke
  *
  */
 public class MessageSenderForm {
