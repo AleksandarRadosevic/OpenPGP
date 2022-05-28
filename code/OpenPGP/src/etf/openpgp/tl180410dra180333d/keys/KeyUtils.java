@@ -546,6 +546,11 @@ public class KeyUtils {
 		return HashAlgorithmTags.SHA1;
 	}
 	
+	/**
+	 * Na osnovu kljuceva u privatnom prstenu formira prsten javnih kluceva
+	 * @param privateKeyRing
+	 * @return PGPPublicKeyRing
+	 */
 	public static PGPPublicKeyRing convertFromPGPPrivateToPublicKeyRing(PGPSecretKeyRing privateKeyRing) {
 		List<PGPPublicKey> publicKeyList = new LinkedList<>();
 		Iterator<PGPPublicKey> iteratorPublicKeysInPrivateRing = privateKeyRing.getPublicKeys();
