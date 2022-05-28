@@ -93,7 +93,7 @@ public class MessagePgpOperations {
 	 * @param bytesToBeEncrypted - poruka za sifrovanje
 	 * @param encryptionKey - javni kljuc koji se koristi za sifrovanje
 	 * @param symetricEncryptionAlgorithm - identifikator simetricnog algoritma koji se koristi pri sifrovanju
-	 * @param boolean bytesInPgpLiteralDataFormat - da li je poruka vec u PGP formatu
+	 * @param bytesInPgpLiteralDataFormat - da li je poruka vec u PGP formatu
 	 * @return sifrovana poruka( niz bajtova)
 	 * @throws IOException
 	 * @throws PGPException
