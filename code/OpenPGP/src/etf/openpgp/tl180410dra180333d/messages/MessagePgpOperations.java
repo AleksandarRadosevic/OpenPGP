@@ -42,8 +42,8 @@ public class MessagePgpOperations {
 	/**
 	 * Operacija koja potpicuje poruku(niz bajtova)
 	 * 
-	 * @param byte[]       dataToBeSigned - poruka za potpisivanje
-	 * @param PGPSecretKey signKey - privatni kljuc koji se koristi za potpisivanje
+	 * @param dataToBeSigned - poruka za potpisivanje
+	 * @param signKey - privatni kljuc koji se koristi za potpisivanje
 	 * @param passphrase   - lozinka za zastitu privatnog kljuca koji se koristi za
 	 *                     potpisivanje
 	 * @return potpisana poruka(niz bajtova)
@@ -90,10 +90,9 @@ public class MessagePgpOperations {
 	/**
 	 * Operacija za sifrovanje poruke( niza bajtova)
 	 * 
-	 * @param byte[]       bytesToBeEncrypted - poruka za sifrovanje
-	 * @param PGPPublicKey encryptionKey - javni kljuc koji se koristi za sifrovanje
-	 * @param int          symetricEncryptionAlgorithm - identifikator simetricnog
-	 *                     algoritma koji se koristi pri sifrovanju
+	 * @param bytesToBeEncrypted - poruka za sifrovanje
+	 * @param encryptionKey - javni kljuc koji se koristi za sifrovanje
+	 * @param symetricEncryptionAlgorithm - identifikator simetricnog algoritma koji se koristi pri sifrovanju
 	 * @param boolean bytesInPgpLiteralDataFormat - da li je poruka vec u PGP formatu
 	 * @return sifrovana poruka( niz bajtova)
 	 * @throws IOException
@@ -139,9 +138,9 @@ public class MessagePgpOperations {
 	/**
 	 * Operacija za zipovanje poruke( niza bajtova)
 	 * 
-	 * @param byte[] bytesToBeZiped - niz bajtova za kompresiju(poruka pre
+	 * @param bytesToBeZiped - niz bajtova za kompresiju(poruka pre
 	 *               kompresije)
-	 * @param boolean bytesInPgpLiteralDataFormat - da li je poruka vec u PGP formatu
+	 * @param bytesInPgpLiteralDataFormat - da li je poruka vec u PGP formatu
 	 * @return kompresovana poruka( niz bajtova) u ZIP formatu
 	 * @throws IOException
 	 */
@@ -175,9 +174,9 @@ public class MessagePgpOperations {
 	/**
 	 * Operacija za konverziju poruke( niza bajtova) u radix64 format
 	 * 
-	 * @param byte[] bytesToBeConvertedIntoRadix64 - niz bajtova za
+	 * @param bytesToBeConvertedIntoRadix64 - niz bajtova za
 	 *               konverziju(poruka pre konverzije)
-	 * @param boolean bytesInPgpLiteralDataFormat - da li je poruka vec u PGP formatu
+	 * @param bytesInPgpLiteralDataFormat - da li je poruka vec u PGP formatu
 	 * @return konvertovana poruka( niz bajtova) u radix64 format
 	 * @throws IOException
 	 */

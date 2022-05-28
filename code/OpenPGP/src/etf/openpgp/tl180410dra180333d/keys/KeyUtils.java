@@ -57,7 +57,7 @@ public class KeyUtils {
 	/**
 	 * Konstruktor koji kao parametar ima aplikaciju u kojoj je neophodno azurirati prikaz kada se model prstenova u ovoj klasi promeni.
 	 * U okviru konstruktora se inicijalizuje model prstenova kljuceva podacima koji se cuvaju na disku, ako postoje.
-	 * @param Application application
+	 * @param application
 	 */
 	public KeyUtils(Application application) {
 		try {
@@ -105,8 +105,8 @@ public class KeyUtils {
 
 	/**
 	 * Metoda koja sluzi za generisanje jednog privatnog para kljuca(potpisivanje, sifrovanje)
-	 * @param String userId - id vlasnika kljuca
-	 * @param String signAlgorithm - algoritam koji se koristi za potpisivanje
+	 * @param userId - id vlasnika kljuca
+	 * @param signAlgorithm - algoritam koji se koristi za potpisivanje
 	 * @param encryptionAlgorithm - algoritam koji se koristi za sifrovanje kljuca sesije
 	 * @param passphrase - zastitna lozinka za privatni kljuc(koristi se njen hes za zastitu privatnog kljuca)
 	 * @return vrednost boolean(logickog) tipa koja prestavlja uspesnost operacije
@@ -236,8 +236,8 @@ public class KeyUtils {
 
 	/**
 	 * Metoda koja sluzi za brisanje para kljuceva iz privatnog prstena kljuceva
-	 * @param long privateKeyRingId - id kljuca za potpisivanje predstavlja id kljuca jednog tog para u kolekciji (ring in collection ring)
-	 * @param String passphrase - lozinka kojom se stiti privatni kljuc
+	 * @param privateKeyRingId - id kljuca za potpisivanje predstavlja id kljuca jednog tog para u kolekciji (ring in collection ring)
+	 * @param passphrase - lozinka kojom se stiti privatni kljuc
 	 * @return vrednost boolean(logickog) tipa koja prestavlja uspesnost operacije 
 	 */
 	public boolean deletePrivateKeyRing(long privateKeyRingId, String passphrase) {
@@ -267,9 +267,9 @@ public class KeyUtils {
 
 	/**
 	 * Metoda koja sluzi da se izveze par kljuceva( potpisivanje, sifrovanje) iz privatnog prstena kljuceva
-	 * @param long keyId - id kljuca za potpisivanje predstavlja id kljuca jednog tog para u kolekciji (ring in collection ring)
-	 * @param String userId - id vlasnika kljuca (prosledjuje se zbog imenovanja fajla) /moglo je da se dogvati i iz samog para kljuceva( potpisivanje, sifrovanje)/
-	 * @param String selectedExportPath -putanja za cuvanje .asc fajla na disku
+	 * @param keyId - id kljuca za potpisivanje predstavlja id kljuca jednog tog para u kolekciji (ring in collection ring)
+	 * @param userId - id vlasnika kljuca (prosledjuje se zbog imenovanja fajla) /moglo je da se dogvati i iz samog para kljuceva( potpisivanje, sifrovanje)/
+	 * @param selectedExportPath -putanja za cuvanje .asc fajla na disku
 	 * @return vrednost boolean(logickog) tipa koja prestavlja uspesnost operacije
 	 */
 	public boolean exportPrivateKeyRing(long keyId, String userId, String selectedExportPath) {
@@ -337,7 +337,7 @@ public class KeyUtils {
 
 	/**
 	 * Metoda za uvoz para kljuceva( sifrovanje, potpisivanje) u prsten privatnih kljuceva
-	 * @param File file - .asc fajl iz koga se uvozi
+	 * @param file - .asc fajl iz koga se uvozi
 	 * @return IMPORT_OPERATION_RESULT - ishod operacije (nabrojivi tip)
 	 */
 	public IMPORT_OPERATION_RESULT importPrivateKeyRing(File file) {
@@ -368,7 +368,7 @@ public class KeyUtils {
 
 	/**
 	 * Metoda koja sluzi za brisanje para kljuceva iz javnog prstena kljuceva
-	 * @param long publicKeyRingId - id kljuca za potpisivanje predstavlja id kljuca jednog tog para u kolekciji (ring in collection ring)
+	 * @param publicKeyRingId - id kljuca za potpisivanje predstavlja id kljuca jednog tog para u kolekciji (ring in collection ring)
 	 * @return vrednost boolean(logickog) tipa koja prestavlja uspesnost operacije 
 	 */
 	public boolean deletePublicKeyRing(long publicKeyRingId) {
@@ -390,7 +390,7 @@ public class KeyUtils {
 
 	/**
 	 * Metoda za uvoz para kljuceva( sifrovanje, potpisivanje) u prsten javnih kljuceva
-	 * @param File file - .asc fajl iz koga se uvozi
+	 * @param file - .asc fajl iz koga se uvozi
 	 * @return IMPORT_OPERATION_RESULT - ishod operacije (nabrojivi tip)
 	 */
 	public IMPORT_OPERATION_RESULT importPublicKeyRing(File file) {
@@ -416,9 +416,9 @@ public class KeyUtils {
 
 	/**
 	 * Metoda koja sluzi da se izveze par kljuceva( potpisivanje, sifrovanje) iz javnog prstena kljuceva
-	 * @param long keyId - id kljuca za potpisivanje predstavlja id kljuca jednog tog para u kolekciji (ring in collection ring)
-	 * @param String userId - id vlasnika kljuca (prosledjuje se zbog imenovanja fajla) /moglo je da se dogvati i iz samog para kljuceva( potpisivanje, sifrovanje)/
-	 * @param String selectedExportPath -putanja za cuvanje .asc fajla na disku
+	 * @param keyId - id kljuca za potpisivanje predstavlja id kljuca jednog tog para u kolekciji (ring in collection ring)
+	 * @param userId - id vlasnika kljuca (prosledjuje se zbog imenovanja fajla) /moglo je da se dogvati i iz samog para kljuceva( potpisivanje, sifrovanje)/
+	 * @param selectedExportPath -putanja za cuvanje .asc fajla na disku
 	 * @return vrednost boolean(logickog) tipa koja prestavlja uspesnost operacije
 	 */
 	public boolean exportPublicKeyRing(long keyId, String userId, String selectedExportPath) {
@@ -503,7 +503,7 @@ public class KeyUtils {
     
     /**
      * Metoda za dohvatanje para kljuceva(potpisivanje, sifrovanje) iz kolekcije prstena privatnih kljuceva
-     * @param long keyId - id para kljuceva (id kljuca za potpisivanje)
+     * @param keyId - id para kljuceva (id kljuca za potpisivanje)
      * @return par kljuceva(potpisivanje, sifrovanje) iz kolekcije prstena privatnih kljuceva
      * @throws PGPException
      */
@@ -513,7 +513,7 @@ public class KeyUtils {
     
     /**
      * Metoda za dohvatanje para kljuceva(potpisivanje, sifrovanje) iz kolekcije prstena javnih kljuceva
-     * @param long keyId - id para kljuceva (id kljuca za potpisivanje)
+     * @param keyId - id para kljuceva (id kljuca za potpisivanje)
      * @return par kljuceva(potpisivanje, sifrovanje) iz kolekcije prstena javnih kljuceva
      * @throws PGPException
      */
@@ -523,7 +523,7 @@ public class KeyUtils {
     
     /**
      * Staticka metoda koja vraca informaciju o tome koji je hash algoritam potrebno koristit za generisanje potpisa na osnovu algoritma kojim se hes sifruje
-     * @param String signAlgorithm - algoritam i velicina kljuca koji se koriste za potpisivanje (npr. DSA 2048)
+     * @param signAlgorithm - algoritam i velicina kljuca koji se koriste za potpisivanje (npr. DSA 2048)
      * @return hes algoritam tag algoritma koji treba da se koristi za formiranje hes-a
      */
 	public static int getHashAlgorithmTag(String signAlgorithm) {
@@ -535,8 +535,8 @@ public class KeyUtils {
 	
     /**
      * Staticka metoda koja vraca informaciju o tome koji je hash algoritam potrebno koristit za generisanje potpisa na osnovu algoritma kojim se hes sifruje
-     * @param int signAlgorithm - algoritam koji koristi kljuc za potpisivanje(npr. dsa)
-     * @param int keySize - velicina kljuca
+     * @param signAlgorithm - algoritam koji koristi kljuc za potpisivanje(npr. dsa)
+     * @param keySize - velicina kljuca
      * @return hes algoritam tag algoritma koji treba da se koristi za formiranje hes-a
      */
 	public static int getHashAlgorithmTag(int signAlgorithm, int keySize) {

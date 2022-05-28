@@ -436,7 +436,7 @@ public class Application extends JFrame {
 	 * Metoda za osvezavanje prikaza kljuceva kada se kolekcija privatnih kljuceva
 	 * promeni
 	 * 
-	 * @param PGPSecretKeyRingCollection privateKeyRingCollection
+	 * @param privateKeyRingCollection
 	 */
 	public void update_privateKeyRingTableModel(PGPSecretKeyRingCollection privateKeyRingCollection) {
 		this.privateKeyRingTableModel.setRowCount(0); // clear table model
@@ -484,7 +484,7 @@ public class Application extends JFrame {
 	 * Metoda za osvezavanje prikaza kljuceva kada se kolekcija javnih kljuceva
 	 * promeni
 	 * 
-	 * @param PGPPublicKeyRingCollection publicKeyRingCollection
+	 * @param publicKeyRingCollection
 	 */
 	public void update_publicKeyRingTableModel(PGPPublicKeyRingCollection publicKeyRingCollection) {
 		this.publicKeyRingTableModel.setRowCount(0); // clear table model

@@ -42,7 +42,7 @@ public class MessageSender {
 	private Path messageDestinationPath = null;
 
 	/**
-	 * @param Application application - aplikacija za koju pravimo gui za slanje.
+	 * @param application - aplikacija za koju pravimo gui za slanje.
 	 */
 	public MessageSender(Application application) {
 		this.application = application;
@@ -51,7 +51,7 @@ public class MessageSender {
 	
 	/**
 	 * Metoda za inicijalizaciju GUI-ja za slanje
-	 * @param JPanel sendMessagePanel - panel u aplikaciji koji inicijalizujemo
+	 * @param sendMessagePanel - panel u aplikaciji koji inicijalizujemo
 	 */
 	public void initializeApplicationPanel(JPanel sendMessagePanel) {
 		sendMessagePanel.setLayout(new BorderLayout());
