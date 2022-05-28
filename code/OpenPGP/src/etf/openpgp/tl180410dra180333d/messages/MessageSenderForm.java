@@ -246,7 +246,7 @@ public class MessageSenderForm {
 				}
 				
 				if(this.radix64) {
-					message = MessagePgpOperations.convertToRadix64(message);
+					message = MessagePgpOperations.convertToRadix64(message, pgpLiteralDataFormat);
 				}
 
 				fileOutputStream.write(message);

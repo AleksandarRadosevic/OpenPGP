@@ -177,15 +177,27 @@ public class MessagePgpOperations {
 	 * 
 	 * @param byte[] bytesToBeConvertedIntoRadix64 - niz bajtova za
 	 *               konverziju(poruka pre konverzije)
+	 * @param boolean bytesInPgpLiteralDataFormat - da li je poruka vec u PGP formatu
 	 * @return konvertovana poruka( niz bajtova) u radix64 format
 	 * @throws IOException
 	 */
-	public static byte[] convertToRadix64(byte[] bytesToBeConvertedIntoRadix64) throws IOException {
+	public static byte[] convertToRadix64(byte[] bytesToBeConvertedIntoRadix64, boolean bytesInPgpLiteralDataFormat) throws IOException {
 		ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
 
 		ArmoredOutputStream radix64OutputStream = new ArmoredOutputStream(byteOutputStream);
 
-		radix64OutputStream.write(bytesToBeConvertedIntoRadix64);
+		if(bytesInPgpLiteralDataFormat) {
+			radix64OutputStream.write(bytesToBeConvertedIntoRadix64);
+		}
+		else {
+	        PGPLiteralDataGenerator pgpLiteralDataGenerator = new PGPLiteralDataGenerator();
+	        OutputStream pgpLiteralDataGeneratorOutputStream = pgpLiteralDataGenerator.open(
+	        		radix64OutputStream, PGPLiteralData.BINARY,
+	                PGPLiteralData.CONSOLE, bytesToBeConvertedIntoRadix64.length, new Date());
+	        
+	        pgpLiteralDataGeneratorOutputStream.write(bytesToBeConvertedIntoRadix64);
+	        pgpLiteralDataGeneratorOutputStream.close();
+		}
 
 		radix64OutputStream.close();
 		byteOutputStream.close();
